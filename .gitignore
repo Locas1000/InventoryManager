@@ -1,0 +1,19 @@
+# =========================
+# React / Node.js
+# =========================
+Client/node_modules/
+Client/dist/
+Client/.env*
+Client/.DS_Store
+
+# =========================
+# .NET / C#
+# =========================
+Server/bin/
+Server/obj/
+Server/appsettings.Development.json
+
+# =========================
+# JetBrains Rider (IDE)
+# =========================
+.idea/
