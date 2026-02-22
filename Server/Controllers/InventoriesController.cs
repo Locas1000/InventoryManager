@@ -41,6 +41,30 @@ public class InventoriesController : ControllerBase
         await _context.SaveChangesAsync(); //if the data is wrong or the DB is down it will throw an error
         return CreatedAtAction(nameof(GetInventories), new {id = inventory.Id}, inventory); // return a 201 Created status and the new inventory 
     }
-    
+
+
+
+// [HttpPut("{id}")] tells .NET: "Expect a URL like /api/inventories/1"
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateInventory(int id, UpdateInvetoryDto dto)
+    {
+        // 1. Find the existing inventory in the database
+        var inventory = await _context.Inventories.FindAsync(id);
+        
+        // 2. If it doesn't exist, return a 404 Not Found
+        if (inventory == null) return NotFound("Inventory not found.");
+
+        // 3. Update the properties with the new data from the DTO
+        inventory.Title = dto.Title;
+        inventory.Description = dto.Description;
+        inventory.Category = dto.Category;
+        inventory.CustomIdTemplate = dto.CustomIdTemplate;
+
+        // 4. Save the changes to PostgreSQL
+        await _context.SaveChangesAsync();
+
+        // 5. Return a 200 OK with the updated inventory so the frontend can see the changes
+        return Ok(inventory);
+    }
     
 }
