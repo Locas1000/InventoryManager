@@ -1,12 +1,25 @@
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+
 namespace Server.Models;
 
 public class User
 {
     public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public bool isAdmin { get; set; }
 
-    public ICollection<Inventory> Inventories { get; set; } = new List<Inventory>();
-    
+    [Required]
+    public string Username { get; set; } = string.Empty;
+
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; } = string.Empty;
+
+    // We store the HASH, not the plain password
+    [JsonIgnore] // Never send the hash back to the frontend
+    public string PasswordHash { get; set; } = string.Empty;
+
+    public string Role { get; set; } = "User";
+
+    // Navigation property
+    public List<Inventory> Inventories { get; set; } = new();
 }

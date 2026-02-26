@@ -25,7 +25,7 @@ public class ItemsController : ControllerBase
         if (item == null) return NotFound("Item not found.");
         return Ok(item);
     }
-[HttpPost]
+    [HttpPost]
     public async Task<ActionResult<Item>> CreateItem(CreateItemDto dto) // <-- Notice it takes the DTO now
     {
         // 1. Find the inventory to get its ID template
@@ -53,5 +53,26 @@ public class ItemsController : ControllerBase
         // 5. Return 201 Created, pointing to our new GET method
         return CreatedAtAction(nameof(GetItem), new { id = newItem.Id }, newItem);
     }
+// DELETE: api/Items/5
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteItem(int id)
+    {
+        // 1. Find the item
+        var item = await _context.Items.FindAsync(id);
+        
+        // 2. If it doesn't exist, return Not Found
+        if (item == null)
+        {
+            return NotFound();
+        }
 
+        // 3. Remove from the database
+        _context.Items.Remove(item);
+        
+        // 4. Save changes
+        // Note: later we will implement Optimistic Locking here using a version field
+        await _context.SaveChangesAsync();
+
+        return NoContent(); // Standard 204 response for successful deletion
+    }
 }

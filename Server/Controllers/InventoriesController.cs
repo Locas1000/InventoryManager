@@ -1,18 +1,20 @@
+using Microsoft.AspNetCore.Authorization; // Required for [Authorize]
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Server.Models;
 using Server.DTOs;
+using Server.Models;
+using System.Security.Claims; // Required to read the Token
+
 namespace Server.Controllers;
 
-
 [ApiController]
-
-[Route("api/[controller]")] //Defines the URL that React will call to
+[Route("api/[controller]")]
+[Authorize] // <--- LOCKS DOWN THE CONTROLLER
 public class InventoriesController : ControllerBase
 {
-    private readonly AppDbContext _context; //this will hold the DB connection
+    private readonly AppDbContext _context;
 
-    public InventoriesController(AppDbContext context) // Dependency injection this makes it so i dont run out of memory by creating and destroying the DB connection every request 
+    public InventoriesController(AppDbContext context)
     {
         _context = context;
     }
@@ -20,51 +22,75 @@ public class InventoriesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Inventory>>> GetInventories()
     {
-        var inventories = await _context.Inventories.ToListAsync(); //converts anything in the Inventories table into a list, and hands it back. We use await so it can work on diferent requests at the same time 
-        return Ok(inventories); // returns a http 200 OK response
+        // Optional: If you only want users to see THEIR own inventories, uncomment the next line:
+        // var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+        // For now, we'll return all, but we could filter by userId if we wanted.
+        var inventories = await _context.Inventories.ToListAsync();
+        return Ok(inventories);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<Inventory>> GetInventory(int id)
+    {
+        var inventory = await _context.Inventories
+            .Include(i => i.Items)
+            .FirstOrDefaultAsync(i => i.Id == id);
+
+        if (inventory == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(inventory);
     }
 
     [HttpPost]
     public async Task<ActionResult<Inventory>> CreateInventory(CreateInventoryDto dto)
     {
+        // 1. GET USER ID FROM TOKEN
+        // The "User" object is available in every Controller because of [Authorize]
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        
+        if (string.IsNullOrEmpty(userIdString))
+        {
+            return Unauthorized("User ID not found in token.");
+        }
 
-        var inventory = new Inventory //manually map the DTO data to a real inventory model
+        int userId = int.Parse(userIdString);
+
+        // 2. Create the Inventory using the REAL User ID
+        var inventory = new Inventory
         {
             Title = dto.Title,
             Description = dto.Description,
             Category = dto.Category,
-            UserId = dto.UserId
+            CustomIdTemplate = dto.CustomIdTemplate, // Don't forget this!
+            UserId = userId // <--- No more hardcoding!
         };
-            
-        _context.Inventories.Add(inventory); //traks the new object 
 
-        await _context.SaveChangesAsync(); //if the data is wrong or the DB is down it will throw an error
-        return CreatedAtAction(nameof(GetInventories), new {id = inventory.Id}, inventory); // return a 201 Created status and the new inventory 
+        _context.Inventories.Add(inventory);
+        await _context.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetInventories), new { id = inventory.Id }, inventory);
     }
 
-
-
-// [HttpPut("{id}")] tells .NET: "Expect a URL like /api/inventories/1"
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateInventory(int id, UpdateInvetoryDto dto)
     {
-        // 1. Find the existing inventory in the database
         var inventory = await _context.Inventories.FindAsync(id);
-        
-        // 2. If it doesn't exist, return a 404 Not Found
         if (inventory == null) return NotFound("Inventory not found.");
 
-        // 3. Update the properties with the new data from the DTO
+        // Optional: Check if the user OWNS this inventory before letting them edit it
+        // var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+        // if (inventory.UserId != userId) return Forbid();
+
         inventory.Title = dto.Title;
         inventory.Description = dto.Description;
         inventory.Category = dto.Category;
         inventory.CustomIdTemplate = dto.CustomIdTemplate;
 
-        // 4. Save the changes to PostgreSQL
         await _context.SaveChangesAsync();
-
-        // 5. Return a 200 OK with the updated inventory so the frontend can see the changes
         return Ok(inventory);
     }
-    
 }
