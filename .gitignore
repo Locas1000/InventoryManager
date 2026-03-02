@@ -1,19 +1,51 @@
 # =========================
-# React / Node.js
+# OS / General
+# =========================
+.DS_Store
+Thumbs.db
+*~
+*.swp
+
+# =========================
+# React / Vite (Frontend)
 # =========================
 Client/node_modules/
 Client/dist/
-Client/.env*
-Client/.DS_Store
+Client/dist-ssr/
+Client/build/
+
+# Archivos de entorno local (¡nunca subas tus secretos!)
+Client/.env
+Client/.env.local
+Client/.env.development.local
+Client/.env.test.local
+Client/.env.production.local
+
+# Logs de gestores de paquetes
+Client/npm-debug.log*
+Client/yarn-debug.log*
+Client/yarn-error.log*
+Client/pnpm-debug.log*
+Client/.eslintcache
 
 # =========================
-# .NET / C#
+# .NET / C# (Backend)
 # =========================
 Server/bin/
 Server/obj/
+
+# Ignorar configuraciones locales para no sobreescribir las de otros devs
 Server/appsettings.Development.json
+Server/appsettings.Local.json
+
+# Archivos de usuario de MSBuild
+*.user
+*.userosscache
+*.sln.docstates
 
 # =========================
-# JetBrains Rider (IDE)
+# JetBrains Rider / Otros IDEs
 # =========================
 .idea/
+*.sln.DotSettings.user
+.vscode/
