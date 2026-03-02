@@ -135,12 +135,18 @@ namespace Server.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AuthProvider")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("PasswordHash")
-                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProviderKey")
                         .HasColumnType("text");
 
                     b.Property<string>("Role")

@@ -16,9 +16,13 @@ public class User
 
     // We store the HASH, not the plain password
     [JsonIgnore] // Never send the hash back to the frontend
-    public string PasswordHash { get; set; } = string.Empty;
+    public string? PasswordHash { get; set; } = string.Empty; // needs to be null beacuse of users using social networks for login
 
     public string Role { get; set; } = "User";
+    
+    public string AuthProvider { get; set; }
+    
+    public string? ProviderKey { get; set; }
 
     // Navigation property
     public List<Inventory> Inventories { get; set; } = new();

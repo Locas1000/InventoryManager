@@ -19,6 +19,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Custom Services
 builder.Services.AddScoped<Server.Services.CustomIdGenerator>();
 
+builder.Services.AddHttpClient();
 // Controllers & JSON Options
 builder.Services.AddControllers().AddJsonOptions(options =>
 {

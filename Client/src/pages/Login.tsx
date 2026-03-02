@@ -1,6 +1,8 @@
 // src/pages/Login.tsx
-import { useState } from "react";
-import { useNavigate,Link } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import GitHubLogin from 'react-github-login';
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -10,6 +12,7 @@ export default function Login() {
 
     const navigate = useNavigate();
 
+    // 🟢 Standard Form Login
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
@@ -28,14 +31,9 @@ export default function Login() {
             }
 
             const data = await response.json();
-
-            // SUCCESS! Save the token and user info to Local Storage
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify({ id: data.userId, username: data.username }));
-
-            // Redirect to the Dashboard
             navigate('/');
-
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -43,53 +41,113 @@ export default function Login() {
         }
     };
 
-    return (
-        <div className="container mt-5">
-            <div className="row justify-content-center">
-                <div className="col-md-6 col-lg-4">
-                    <div className="card shadow-sm border-0">
-                        <div className="card-body p-4">
-                            <h2 className="text-center mb-4 fw-bold">Sign In</h2>
+    // 🟢 Added back the Google handler!
+    const handleGoogleSuccess = async (response: any) => {
+        if (!response.credential) return;
 
-                            {error && <div className="alert alert-danger">{error}</div>}
+        try {
+            const res = await fetch('http://localhost:5000/api/auth/google', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: response.credential }),
+            });
 
-                            <form onSubmit={handleLogin}>
-                                <div className="mb-3">
-                                    <label className="form-label text-muted">Email address</label>
-                                    <input
-                                        type="email"
-                                        className="form-control form-control-lg"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        required
-                                    />
-                                </div>
-                                <div className="mb-4">
-                                    <label className="form-label text-muted">Password</label>
-                                    <input
-                                        type="password"
-                                        className="form-control form-control-lg"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        required
-                                    />
-                                </div>
-                                <button
-                                    type="submit"
-                                    className="btn btn-primary btn-lg w-100"
-                                    disabled={isLoading}
-                                >
-                                    {isLoading ? "Signing in..." : "Sign In"}
-                                </button>
-                                <div className="text-center text-muted mt-3">
-                                    Don't have an account? <Link to="/register" className="text-decoration-none">Sign Up</Link>
-                                </div>
-                            </form>
+            if (res.ok) {
+                const data = await res.json();
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify({ id: data.userId, username: data.username }));
+                navigate('/');
+            } else {
+                console.error('Google login failed on backend');
+            }
+        } catch (err) {
+            console.error('Network error during Google login', err);
+        }
+    };
 
+    // 🟢 GitHub Handler
+    const handleGithubSuccess = async (response: { code: string }) => {
+        try {
+            const res = await fetch('http://localhost:5000/api/auth/github', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: response.code }),
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify({ id: data.userId, username: data.username }));
+                navigate('/');
+            } else {
+                console.error('GitHub login failed on backend');
+            }
+        } catch (err) {
+            console.error('Network error during GitHub login', err);
+        }
+    };
+
+return (
+    <div className="container mt-5">
+        <div className="row justify-content-center">
+            <div className="col-md-6">
+                <div className="card shadow p-4">
+                    <h2 className="text-center">Login</h2>
+                    <hr />
+
+                    {/* 🟢 RESTORED: Your original Email/Password Form */}
+                    <form onSubmit={handleLogin}>
+                        {error && <div className="alert alert-danger">{error}</div>}
+                        <div className="mb-3">
+                            <label className="form-label">Email</label>
+                            <input 
+                                type="email" 
+                                className="form-control" 
+                                value={email} 
+                                onChange={(e) => setEmail(e.target.value)} 
+                                required 
+                            />
                         </div>
+                        <div className="mb-3">
+                            <label className="form-label">Password</label>
+                            <input 
+                                type="password" 
+                                className="form-control" 
+                                value={password} 
+                                onChange={(e) => setPassword(e.target.value)} 
+                                required 
+                            />
+                        </div>
+                        <button type="submit" className="btn btn-primary w-100" disabled={isLoading}>
+                            {isLoading ? "Logging in..." : "Login"}
+                        </button>
+                    </form>
+
+                    <div className="text-center my-3 text-muted">OR</div>
+
+                    {/* Social Buttons Section */}
+                    <div className="d-flex flex-column align-items-center gap-3">
+                        <GoogleLogin
+                            onSuccess={handleGoogleSuccess}
+                            onError={() => console.error('Google Login Failed')}
+                        />
+
+                        <GitHubLogin
+                            clientId={import.meta.env.VITE_GITHUB_CLIENT_ID || ''}
+                            onSuccess={handleGithubSuccess}
+                            onFailure={(res) => console.error('GitHub Login Failed', res)}
+                            className="btn btn-dark w-100"
+                            buttonText="Login with GitHub"
+                            redirectUri="http://localhost:5173/login" 
+                        />
                     </div>
+                    
+                    <p className="mt-3 text-center">
+                        Don't have an account? <Link to="/register">Register here</Link>
+                    </p>
                 </div>
             </div>
         </div>
+    </div>
     );
 }
