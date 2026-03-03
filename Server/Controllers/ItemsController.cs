@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Server.DTOs;
 using Server.Models;
 using Server.Services; 
+using Microsoft.EntityFrameworkCore;
 
 namespace Server.Controllers;
 
@@ -25,17 +26,17 @@ public class ItemsController : ControllerBase
         if (item == null) return NotFound("Item not found.");
         return Ok(item);
     }
-    [HttpPost]
-    public async Task<ActionResult<Item>> CreateItem(CreateItemDto dto) // <-- Notice it takes the DTO now
+[HttpPost]
+    public async Task<ActionResult<Item>> CreateItem(CreateItemDto dto)
     {
-        // 1. Find the inventory to get its ID template
         var inventory = await _context.Inventories.FindAsync(dto.InventoryId);
         if (inventory == null) return NotFound("Inventory not found.");
 
-        // 2. Generate the ID using our Service
         var generatedId = await _idGenerator.GenerateIdAsync(dto.InventoryId, inventory.CustomIdTemplate);
 
-        // 3. Build the Item and map the DTO values to the database columns
+        // 🟢 DEBUGGING: Print the ID to your C# terminal so we can see what's happening!
+        Console.WriteLine($"---> ATTEMPTING TO SAVE ITEM WITH ID: {generatedId}");
+
         var newItem = new Item
         {
             InventoryId = dto.InventoryId,
@@ -46,13 +47,28 @@ public class ItemsController : ControllerBase
             Number1Value = dto.Number1Value
         };
 
-        // 4. Save to PostgreSQL
         _context.Items.Add(newItem);
-        await _context.SaveChangesAsync();
 
-        // 5. Return 201 Created, pointing to our new GET method
-        return CreatedAtAction(nameof(GetItem), new { id = newItem.Id }, newItem);
+        try
+        {
+            await _context.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetItem), new { id = newItem.Id }, newItem);
+        }
+        catch (DbUpdateException ex)
+        {
+            // 🟢 The ULTIMATE Postgres duplicate key catcher
+            var innerEx = ex.InnerException as Npgsql.PostgresException;
+            if (innerEx != null && innerEx.SqlState == "23505")
+            {
+                return BadRequest(new { message = $"Duplicate ID detected! The generator tried to save '{generatedId}' but it already exists. Please check your Inventory ID Template." });
+            }
+
+            // If it's something else, throw it
+            throw;
+        }
     }
+
+
 // DELETE: api/Items/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteItem(int id)

@@ -46,7 +46,7 @@ export default function Login() {
         if (!response.credential) return;
 
         try {
-            const res = await fetch('http://localhost:5000/api/auth/google', {
+            const res = await fetch('http://localhost:5164/api/auth/google', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token: response.credential }),
@@ -68,7 +68,7 @@ export default function Login() {
     // 🟢 GitHub Handler
     const handleGithubSuccess = async (response: { code: string }) => {
         try {
-            const res = await fetch('http://localhost:5000/api/auth/github', {
+            const res = await fetch('http://localhost:5164/api/auth/github', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ code: response.code }),

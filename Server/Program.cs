@@ -20,6 +20,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<Server.Services.CustomIdGenerator>();
 
 builder.Services.AddHttpClient();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowVite",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173") // Your frontend URL
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
 // Controllers & JSON Options
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
@@ -95,6 +106,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseCors("AllowVite");   
 
 app.UseHttpsRedirection();
 

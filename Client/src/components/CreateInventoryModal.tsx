@@ -1,5 +1,7 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { fetchWithAuth } from "../utils/api";
+import CustomIdBuilder from "./CustomIdBuilder"; // 🟢 IMPORT YOUR NEW COMPONENT
+
 interface Props {
     show: boolean;         // Is the popup visible?
     onClose: () => void;   // Function to close the popup
@@ -10,10 +12,11 @@ export default function CreateInventoryModal({ show, onClose, onSuccess }: Props
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [category, setCategory] = useState("Equipment");
-    const [customIdTemplate, setCustomIdTemplate] = useState("FIXED:ITEM-|DATE:yyyy-|SEQ");
+    // Only ONE state declaration for the template!
+    const [customIdTemplate, setCustomIdTemplate] = useState("FIXED:INV-|SEQ:D3");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    if (!show) return null; // If "show" is false, render nothing!
+    if (!show) return null;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -29,10 +32,11 @@ export default function CreateInventoryModal({ show, onClose, onSuccess }: Props
             });
 
             if (response.ok) {
-                // Reset form and close modal
                 setTitle("");
                 setDescription("");
-                onSuccess(); // <--- This tells the Dashboard to reload data!
+                setCategory("Equipment");
+                setCustomIdTemplate("FIXED:INV-|SEQ:D3"); // Reset to default
+                onSuccess();
                 onClose();
             } else {
                 alert("Failed to create inventory.");
@@ -45,14 +49,14 @@ export default function CreateInventoryModal({ show, onClose, onSuccess }: Props
     };
 
     return (
-        // Bootstrap Modal Structure with manual "display: block"
         <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-lg">
+            <div className="modal-dialog modal-xl"> {/* Changed to modal-xl for more drag-and-drop room */}
                 <div className="modal-content">
-                    <div className="modal-header">
-                        <h5 className="modal-title">🏗️ Build New Inventory</h5>
+                    <div className="modal-header bg-light">
+                        <h5 className="modal-title fw-bold">🏗️ Build New Inventory</h5>
                         <button type="button" className="btn-close" onClick={onClose}></button>
                     </div>
+                    
                     <div className="modal-body">
                         <form id="create-form" onSubmit={handleSubmit}>
                             <div className="row mb-3">
@@ -71,23 +75,31 @@ export default function CreateInventoryModal({ show, onClose, onSuccess }: Props
                                     </select>
                                 </div>
                             </div>
-                            <div className="mb-3">
+                            
+                            <div className="mb-4">
                                 <label className="form-label fw-bold">Description</label>
-                                <textarea className="form-control" rows={3}
+                                <textarea className="form-control" rows={2}
                                           value={description} onChange={e => setDescription(e.target.value)}></textarea>
                             </div>
+
+                            <hr />
+
+                            {/* 🟢 REPLACED THE OLD INPUT WITH YOUR DRAG-AND-DROP BUILDER */}
                             <div className="mb-3">
-                                <label className="form-label fw-bold">ID Template Rule</label>
-                                <input type="text" className="form-control" required
-                                       value={customIdTemplate} onChange={e => setCustomIdTemplate(e.target.value)} />
-                                <small className="text-muted">Use <code>FIXED:text-</code>, <code>DATE:yyyy</code>, <code>SEQ</code></small>
+                                <label className="form-label fw-bold fs-5">Custom ID Rules</label>
+                                <p className="text-muted small mb-0">Define how items in this inventory will automatically generate their IDs.</p>
+                                
+                                <CustomIdBuilder
+                                    initialTemplate={customIdTemplate}
+                                    onTemplateChange={(newVal) => setCustomIdTemplate(newVal)}
+                                />
                             </div>
                         </form>
                     </div>
-                    <div className="modal-footer">
+                    
+                    <div className="modal-footer bg-light">
                         <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
-                        {/* We link the button to the form ID so it submits correctly */}
-                        <button type="submit" form="create-form" className="btn btn-primary" disabled={isSubmitting}>
+                        <button type="submit" form="create-form" className="btn btn-primary px-4" disabled={isSubmitting}>
                             {isSubmitting ? "Saving..." : "Save Inventory"}
                         </button>
                     </div>
