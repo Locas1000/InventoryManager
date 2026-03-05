@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import AddItemModal from "../components/AddItemModal";
-import { fetchWithAuth } from "../utils/api"; 
+import { fetchWithAuth } from "../utils/api";
 // 1. Interface definitions (Same as before)
 interface Item {
     id: number;
@@ -30,7 +30,7 @@ export default function InventoryDetails() {
     const { id } = useParams();
     const [inventory, setInventory] = useState<Inventory | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [showModal, setShowModal] = useState(false);
+    const [showAddItemModal, setShowAddItemModal] = useState(false);
 
     const fetchInventory = useCallback(() => {
         fetchWithAuth(`/api/inventories/${id}`)
@@ -74,16 +74,38 @@ export default function InventoryDetails() {
         }
     };
 
-    // Helper for dynamic columns
+// Helper for dynamic columns
     const getDynamicColumns = () => {
         if (!inventory) return [];
-        const columns = [{ key: 'customId', label: 'ID' }];
+        // Make sure we always show ID and Name first!
+        const columns = [
+            { key: 'customId', label: 'ID' },
+            { key: 'name', label: 'Item Name' }
+        ];
+
+        // Strings
         if (inventory.string1Name) columns.push({ key: 'string1Value', label: inventory.string1Name });
         if (inventory.string2Name) columns.push({ key: 'string2Value', label: inventory.string2Name });
         if (inventory.string3Name) columns.push({ key: 'string3Value', label: inventory.string3Name });
+
+        // Numbers
         if (inventory.number1Name) columns.push({ key: 'number1Value', label: inventory.number1Name });
+        if (inventory.number2Name) columns.push({ key: 'number2Value', label: inventory.number2Name });
+        if (inventory.number3Name) columns.push({ key: 'number3Value', label: inventory.number3Name });
+
+        // Text Areas
+        if (inventory.text1Name) columns.push({ key: 'text1Value', label: inventory.text1Name });
+        if (inventory.text2Name) columns.push({ key: 'text2Value', label: inventory.text2Name });
+        if (inventory.text3Name) columns.push({ key: 'text3Value', label: inventory.text3Name });
+
+        // Booleans
+        if (inventory.bool1Name) columns.push({ key: 'bool1Value', label: inventory.bool1Name });
+        if (inventory.bool2Name) columns.push({ key: 'bool2Value', label: inventory.bool2Name });
+        if (inventory.bool3Name) columns.push({ key: 'bool3Value', label: inventory.bool3Name });
+
         return columns;
     };
+
 
     if (isLoading) return <div className="text-center mt-5"><div className="spinner-border text-primary"></div></div>;
     if (!inventory) return <div className="text-center mt-5"><h3>Inventory not found!</h3><Link to="/">Go Home</Link></div>;
@@ -107,7 +129,7 @@ export default function InventoryDetails() {
 
                 <button
                     className="btn btn-primary btn-lg"
-                    onClick={() => setShowModal(true)}
+                    onClick={() => setShowAddItemModal(true)}
                 >
                     + Add New Item
                 </button>
@@ -135,19 +157,28 @@ export default function InventoryDetails() {
                         ) : (
                             inventory.items.map(item => (
                                 <tr key={item.id}>
+                                    {/* 🟢 THE MISSING LOOP: We have to map the columns to generate the <td> cells! */}
                                     {columns.map(col => (
                                         <td key={col.key}>
                                             {col.key === 'customId' ? (
                                                 <span className="fw-bold font-monospace text-primary">
                                                     {item.customId}
                                                 </span>
+                                            ) : typeof item[col.key] === 'boolean' ? (
+                                                // Safely display checkboxes as Yes/No badges
+                                                <span className={`badge ${item[col.key] ? 'bg-success' : 'bg-secondary'}`}>
+                                                    {item[col.key] ? 'Yes' : 'No'}
+                                                </span>
                                             ) : (
-                                                item[col.key] || "—"
+                                                // Safely render numbers and strings
+                                                item[col.key] !== null && item[col.key] !== undefined && item[col.key] !== ""
+                                                    ? String(item[col.key])
+                                                    : "—"
                                             )}
                                         </td>
                                     ))}
 
-                                    {/* 3. WIRED UP: Delete Button */}
+                                    {/* The Delete Button stays inside the <tr> but outside the columns loop */}
                                     <td className="text-end">
                                         <button
                                             className="btn btn-sm btn-outline-danger"
@@ -160,20 +191,18 @@ export default function InventoryDetails() {
                             ))
                         )}
                         </tbody>
+
                     </table>
                 </div>
             </div>
 
             {inventory && (
                 <AddItemModal
-                    show={showModal}
-                    inventoryId={inventory.id}
-                    onClose={() => setShowModal(false)}
-                    onSuccess={() => {
-                        fetchInventory();
-                    }}
-                />
-            )}
+                    show={showAddItemModal}
+                    onClose={() => setShowAddItemModal(false)}
+                    onSuccess={fetchInventory} // Your function that reloads the items list
+                    inventory={inventory} // Pass the inventory object here!
+                />            )}
         </div>
     );
 }

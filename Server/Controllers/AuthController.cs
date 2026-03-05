@@ -50,7 +50,8 @@ public class AuthController : ControllerBase
             Username = request.Username,
             Email = request.Email,
             PasswordHash = passwordHash, // Ensure your User model has this property!
-            Role = "User" // Default role
+            Role = "User",// Default role
+            AuthProvider = "Local"
         };
 
         _context.Users.Add(user);

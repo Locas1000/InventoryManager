@@ -1,94 +1,207 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { fetchWithAuth } from "../utils/api";
 
 interface Props {
     show: boolean;
-    inventoryId: number;
     onClose: () => void;
     onSuccess: () => void;
+    inventory: any; // The parent inventory object containing our custom field names!
 }
 
-export default function AddItemModal({ show, inventoryId, onClose, onSuccess }: Props) {
-    const [string1, setString1] = useState("");
-    const [string2, setString2] = useState("");
-    const [number1, setNumber1] = useState<number | "">("");
-    const [isLoading, setIsLoading] = useState(false);
-    
-    // 1. ADDED: Missing error state to prevent crashes in the catch block
-    const [error, setError] = useState<string | null>(null);
+export default function AddItemModal({ show, onClose, onSuccess, inventory }: Props) {
+    const [name, setName] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    if (!show) return null;
+    // State for the actual data the user types in
+    const [customValues, setCustomValues] = useState({
+        string1Value: "", string2Value: "", string3Value: "",
+        text1Value: "", text2Value: "", text3Value: "",
+        number1Value: "", number2Value: "", number3Value: "",
+        bool1Value: false, bool2Value: false, bool3Value: false
+    });
+
+    if (!show || !inventory) return null;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsLoading(true);
-        setError(null);
+        setIsSubmitting(true);
+
+        // Build the exact DTO the C# backend expects
+        const newItem = {
+            name,
+            inventoryId: inventory.id,
+            ...customValues,
+            // Convert empty strings to null for numbers so the database doesn't complain
+            number1Value: customValues.number1Value === "" ? null : Number(customValues.number1Value),
+            number2Value: customValues.number2Value === "" ? null : Number(customValues.number2Value),
+            number3Value: customValues.number3Value === "" ? null : Number(customValues.number3Value),
+        };
 
         try {
             const response = await fetchWithAuth('/api/items', {
                 method: 'POST',
-                body: JSON.stringify({
-                    inventoryId: inventoryId,
-                    // 2. FIXED: Changed from field1/field2/field3 to string1/string2/number1
-                    string1Value: string1, 
-                    string2Value: string2,
-                    number1Value: number1 === "" ? null : Number(number1)
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newItem)
             });
 
-            if (!response.ok){
-                throw new Error("Failed to create item");
+            if (response.ok) {
+                // Reset form
+                setName("");
+                setCustomValues({
+                    string1Value: "", string2Value: "", string3Value: "",
+                    text1Value: "", text2Value: "", text3Value: "",
+                    number1Value: "", number2Value: "", number3Value: "",
+                    bool1Value: false, bool2Value: false, bool3Value: false
+                });
+                onSuccess();
+                onClose();
+            } else {
+                const errorData = await response.json();
+                alert(errorData.message || "Failed to create item.");
             }
-            
-            onSuccess();
-            onClose();
-            
-        } catch (err: any) {
-            setError(err.message);
-            alert("Error adding item");
+        } catch (error) {
+            console.error("Error:", error);
         } finally {
-            setIsLoading(false);
+            setIsSubmitting(false);
         }
     };
 
+    // Helper for strings and numbers
+    const handleValueChange = (field: string, value: string) => {
+        setCustomValues(prev => ({ ...prev, [field]: value }));
+    };
+
+    // Helper specifically for checkboxes
+    const handleCheckboxChange = (field: string, checked: boolean) => {
+        setCustomValues(prev => ({ ...prev, [field]: checked }));
+    };
+
     return (
-        <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog">
+        <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', overflowY: 'auto' }}>
+            <div className="modal-dialog modal-lg">
                 <div className="modal-content">
-                    <div className="modal-header">
-                        <h5 className="modal-title">➕ Add New Item</h5>
+                    <div className="modal-header bg-light">
+                        <h5 className="modal-title fw-bold">➕ Add Item to {inventory.title}</h5>
                         <button type="button" className="btn-close" onClick={onClose}></button>
                     </div>
+                    
                     <div className="modal-body">
-                        {/* Display error if there is one */}
-                        {error && <div className="alert alert-danger py-2">{error}</div>}
-                        
                         <form id="add-item-form" onSubmit={handleSubmit}>
-                            <div className="mb-3">
-                                <label className="form-label">Field 1 (Text)</label>
-                                <input type="text" className="form-control" placeholder="e.g. Dell XPS"
-                                       value={string1} onChange={e => setString1(e.target.value)} />
+                            {/* --- STANDARD FIELDS --- */}
+                            <div className="mb-4 border-bottom pb-3">
+                                <label className="form-label fw-bold">Item Name <span className="text-danger">*</span></label>
+                                <input type="text" className="form-control" required
+                                       value={name} onChange={e => setName(e.target.value)} 
+                                       placeholder="e.g., ThinkPad T14" />
                             </div>
 
-                            <div className="mb-3">
-                                <label className="form-label">Field 2 (Text)</label>
-                                <input type="text" className="form-control" placeholder="e.g. Mint Condition"
-                                       value={string2} onChange={e => setString2(e.target.value)} />
-                            </div>
+                            {/* --- DYNAMIC CUSTOM FIELDS --- */}
+                            <div className="row g-3">
+                                {/* Strings */}
+                                {inventory.string1Name && (
+                                    <div className="col-md-6">
+                                        <label className="form-label fw-bold">{inventory.string1Name}</label>
+                                        <input type="text" className="form-control" 
+                                               value={customValues.string1Value} onChange={e => handleValueChange('string1Value', e.target.value)} />
+                                    </div>
+                                )}
+                                {inventory.string2Name && (
+                                    <div className="col-md-6">
+                                        <label className="form-label fw-bold">{inventory.string2Name}</label>
+                                        <input type="text" className="form-control" 
+                                               value={customValues.string2Value} onChange={e => handleValueChange('string2Value', e.target.value)} />
+                                    </div>
+                                )}
+                                {inventory.string3Name && (
+                                    <div className="col-md-6">
+                                        <label className="form-label fw-bold">{inventory.string3Name}</label>
+                                        <input type="text" className="form-control" 
+                                               value={customValues.string3Value} onChange={e => handleValueChange('string3Value', e.target.value)} />
+                                    </div>
+                                )}
 
-                            <div className="mb-3">
-                                <label className="form-label">Field 3 (Number)</label>
-                                <input type="number" className="form-control" placeholder="e.g. 32 (GB RAM)"
-                                       value={number1} onChange={e => setNumber1(Number(e.target.value))} />
+                                {/* Numbers */}
+                                {inventory.number1Name && (
+                                    <div className="col-md-6">
+                                        <label className="form-label fw-bold">{inventory.number1Name}</label>
+                                        <input type="number" step="any" className="form-control" 
+                                               value={customValues.number1Value} onChange={e => handleValueChange('number1Value', e.target.value)} />
+                                    </div>
+                                )}
+                                {inventory.number2Name && (
+                                    <div className="col-md-6">
+                                        <label className="form-label fw-bold">{inventory.number2Name}</label>
+                                        <input type="number" step="any" className="form-control" 
+                                               value={customValues.number2Value} onChange={e => handleValueChange('number2Value', e.target.value)} />
+                                    </div>
+                                )}
+                                {inventory.number3Name && (
+                                    <div className="col-md-6">
+                                        <label className="form-label fw-bold">{inventory.number3Name}</label>
+                                        <input type="number" step="any" className="form-control" 
+                                               value={customValues.number3Value} onChange={e => handleValueChange('number3Value', e.target.value)} />
+                                    </div>
+                                )}
+
+                                {/* Text Areas */}
+                                {inventory.text1Name && (
+                                    <div className="col-12">
+                                        <label className="form-label fw-bold">{inventory.text1Name}</label>
+                                        <textarea className="form-control" rows={2}
+                                                  value={customValues.text1Value} onChange={e => handleValueChange('text1Value', e.target.value)}></textarea>
+                                    </div>
+                                )}
+                                {inventory.text2Name && (
+                                    <div className="col-12">
+                                        <label className="form-label fw-bold">{inventory.text2Name}</label>
+                                        <textarea className="form-control" rows={2}
+                                                  value={customValues.text2Value} onChange={e => handleValueChange('text2Value', e.target.value)}></textarea>
+                                    </div>
+                                )}
+                                {inventory.text3Name && (
+                                    <div className="col-12">
+                                        <label className="form-label fw-bold">{inventory.text3Name}</label>
+                                        <textarea className="form-control" rows={2}
+                                                  value={customValues.text3Value} onChange={e => handleValueChange('text3Value', e.target.value)}></textarea>
+                                    </div>
+                                )}
+
+                                {/* Booleans (Checkboxes) */}
+                                {inventory.bool1Name && (
+                                    <div className="col-md-4 mt-4">
+                                        <div className="form-check form-switch fs-5">
+                                            <input className="form-check-input" type="checkbox" role="switch"
+                                                   checked={customValues.bool1Value} onChange={e => handleCheckboxChange('bool1Value', e.target.checked)} />
+                                            <label className="form-check-label ms-2">{inventory.bool1Name}</label>
+                                        </div>
+                                    </div>
+                                )}
+                                {inventory.bool2Name && (
+                                    <div className="col-md-4 mt-4">
+                                        <div className="form-check form-switch fs-5">
+                                            <input className="form-check-input" type="checkbox" role="switch"
+                                                   checked={customValues.bool2Value} onChange={e => handleCheckboxChange('bool2Value', e.target.checked)} />
+                                            <label className="form-check-label ms-2">{inventory.bool2Name}</label>
+                                        </div>
+                                    </div>
+                                )}
+                                {inventory.bool3Name && (
+                                    <div className="col-md-4 mt-4">
+                                        <div className="form-check form-switch fs-5">
+                                            <input className="form-check-input" type="checkbox" role="switch"
+                                                   checked={customValues.bool3Value} onChange={e => handleCheckboxChange('bool3Value', e.target.checked)} />
+                                            <label className="form-check-label ms-2">{inventory.bool3Name}</label>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </form>
                     </div>
-                    <div className="modal-footer">
+                    
+                    <div className="modal-footer bg-light mt-4">
                         <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
-                        
-                        {/* 3. FIXED: Added form="add-item-form" so it can trigger the submit event! */}
-                        <button type="submit" form="add-item-form" className="btn btn-primary" disabled={isLoading}>
-                            {isLoading ? "Adding..." : "Add Item"}
+                        <button type="submit" form="add-item-form" className="btn btn-success px-4" disabled={isSubmitting}>
+                            {isSubmitting ? "Creating..." : "Save Item"}
                         </button>
                     </div>
                 </div>

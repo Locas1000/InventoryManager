@@ -34,18 +34,30 @@ public class ItemsController : ControllerBase
 
         var generatedId = await _idGenerator.GenerateIdAsync(dto.InventoryId, inventory.CustomIdTemplate);
 
-        // 🟢 DEBUGGING: Print the ID to your C# terminal so we can see what's happening!
         Console.WriteLine($"---> ATTEMPTING TO SAVE ITEM WITH ID: {generatedId}");
 
+// Example for CreateItem:
         var newItem = new Item
         {
+            Name = dto.Name,
             InventoryId = dto.InventoryId,
             CustomId = generatedId,
+    
+            // 🟢 Map the Custom Field Values
             String1Value = dto.String1Value,
             String2Value = dto.String2Value,
             String3Value = dto.String3Value,
-            Number1Value = dto.Number1Value
+            Text1Value = dto.Text1Value,
+            Text2Value = dto.Text2Value,
+            Text3Value = dto.Text3Value,
+            Number1Value = dto.Number1Value,
+            Number2Value = dto.Number2Value,
+            Number3Value = dto.Number3Value,
+            Bool1Value = dto.Bool1Value,
+            Bool2Value = dto.Bool2Value,
+            Bool3Value = dto.Bool3Value
         };
+
 
         _context.Items.Add(newItem);
 

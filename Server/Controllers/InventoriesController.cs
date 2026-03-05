@@ -65,9 +65,25 @@ public class InventoriesController : ControllerBase
             Title = dto.Title,
             Description = dto.Description,
             Category = dto.Category,
-            CustomIdTemplate = dto.CustomIdTemplate, // Don't forget this!
-            UserId = userId // <--- No more hardcoding!
+            CustomIdTemplate = dto.CustomIdTemplate,
+            UserId = userId,
+    
+            // 🟢 Map the Custom Field Names
+            String1Name = dto.String1Name,
+            String2Name = dto.String2Name,
+            String3Name = dto.String3Name,
+            Text1Name = dto.Text1Name,
+            Text2Name = dto.Text2Name,
+            Text3Name = dto.Text3Name,
+            Number1Name = dto.Number1Name,
+            Number2Name = dto.Number2Name,
+            Number3Name = dto.Number3Name,
+            Bool1Name = dto.Bool1Name,
+            Bool2Name = dto.Bool2Name,
+            Bool3Name = dto.Bool3Name,
+            ImageUrl = dto.ImageUrl
         };
+
 
         _context.Inventories.Add(inventory);
         await _context.SaveChangesAsync();

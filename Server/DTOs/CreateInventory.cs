@@ -11,9 +11,24 @@ public class CreateInventoryDto
 
     public string Category { get; set; } = "Other";
     
-    // THIS WAS MISSING
     public string CustomIdTemplate { get; set; } = "FIXED:ITEM-|SEQ"; 
 
-    // We don't need UserId here anymore because we get it from the Token!
-    // public int UserId { get; set; } <--- Remove this if it's there
+    // --- CUSTOM FIELD NAMES (Optional) ---
+    public string? String1Name { get; set; }
+    public string? String2Name { get; set; }
+    public string? String3Name { get; set; }
+
+    public string? Text1Name { get; set; }
+    public string? Text2Name { get; set; }
+    public string? Text3Name { get; set; }
+
+    public string? Number1Name { get; set; }
+    public string? Number2Name { get; set; }
+    public string? Number3Name { get; set; }
+
+    public string? Bool1Name { get; set; }
+    public string? Bool2Name { get; set; }
+    public string? Bool3Name { get; set; }
+    
+    public string? ImageUrl { get; set; }
 }

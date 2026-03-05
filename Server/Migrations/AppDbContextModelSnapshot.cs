@@ -30,6 +30,24 @@ namespace Server.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Bool1Name")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Bool1Visible")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Bool2Name")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Bool2Visible")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Bool3Name")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Bool3Visible")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Category")
                         .IsRequired()
                         .HasColumnType("text");
@@ -51,6 +69,18 @@ namespace Server.Migrations
                     b.Property<bool>("Number1Visible")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("Number2Name")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Number2Visible")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Number3Name")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Number3Visible")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("String1Name")
                         .HasColumnType("text");
 
@@ -67,6 +97,24 @@ namespace Server.Migrations
                         .HasColumnType("text");
 
                     b.Property<bool>("String3Visible")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Text1Name")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Text1Visible")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Text2Name")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Text2Visible")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Text3Name")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Text3Visible")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Title")
@@ -91,8 +139,14 @@ namespace Server.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<bool?>("Bool1Value")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool?>("Bool2Value")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool?>("Bool3Value")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("CustomId")
                         .IsRequired()
@@ -101,7 +155,17 @@ namespace Server.Migrations
                     b.Property<int>("InventoryId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<double?>("Number1Value")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Number2Value")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Number3Value")
                         .HasColumnType("double precision");
 
                     b.Property<string>("String1Value")
@@ -111,6 +175,15 @@ namespace Server.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("String3Value")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Text1Value")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Text2Value")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Text3Value")
                         .HasColumnType("text");
 
                     b.Property<uint>("Version")
