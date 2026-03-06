@@ -1,19 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { fetchWithAuth } from "../utils/api";
-import ImageUpload from "./ImageUpload";
+
 interface Props {
     show: boolean;
     onClose: () => void;
     onSuccess: () => void;
-    inventory: any; // The parent inventory object containing our custom field names!
+    inventory: any;
+    item: any; // The existing item data to pre-fill the form
 }
 
-export default function AddItemModal({ show, onClose, onSuccess, inventory }: Props) {
+export default function EditItemModal({ show, onClose, onSuccess, inventory, item }: Props) {
     const [name, setName] = useState("");
+    const [customId, setCustomId] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [imageUrl, setImageUrl] = useState<string | null>(null);
-    
-    // State for the actual data the user types in
+
     const [customValues, setCustomValues] = useState({
         string1Value: "", string2Value: "", string3Value: "",
         text1Value: "", text2Value: "", text3Value: "",
@@ -21,45 +21,56 @@ export default function AddItemModal({ show, onClose, onSuccess, inventory }: Pr
         bool1Value: false, bool2Value: false, bool3Value: false
     });
 
-    if (!show || !inventory) return null;
+    // 🟢 Pre-fill the form when the modal opens with a specific item
+    useEffect(() => {
+        if (item) {
+            setName(item.name || "");
+            setCustomId(item.customId || "");
+            setCustomValues({
+                string1Value: item.string1Value || "",
+                string2Value: item.string2Value || "",
+                string3Value: item.string3Value || "",
+                text1Value: item.text1Value || "",
+                text2Value: item.text2Value || "",
+                text3Value: item.text3Value || "",
+                number1Value: item.number1Value ?? "",
+                number2Value: item.number2Value ?? "",
+                number3Value: item.number3Value ?? "",
+                bool1Value: !!item.bool1Value,
+                bool2Value: !!item.bool2Value,
+                bool3Value: !!item.bool3Value
+            });
+        }
+    }, [item, show]);
+
+    if (!show || !inventory || !item) return null;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
 
-        // Build the exact DTO the C# backend expects
-        const newItem = {
+        const updatedItem = {
             name,
-            inventoryId: inventory.id,
-            imageUrl,
+            customId, // Custom IDs are editable in the item form [cite: 95]
             ...customValues,
-            // Convert empty strings to null for numbers so the database doesn't complain
             number1Value: customValues.number1Value === "" ? null : Number(customValues.number1Value),
             number2Value: customValues.number2Value === "" ? null : Number(customValues.number2Value),
             number3Value: customValues.number3Value === "" ? null : Number(customValues.number3Value),
         };
 
         try {
-            const response = await fetchWithAuth('/api/items', {
-                method: 'POST',
+            const response = await fetchWithAuth(`/api/items/${item.id}`, {
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newItem)
+                body: JSON.stringify(updatedItem)
             });
 
             if (response.ok) {
-                // Reset form
-                setName("");
-                setCustomValues({
-                    string1Value: "", string2Value: "", string3Value: "",
-                    text1Value: "", text2Value: "", text3Value: "",
-                    number1Value: "", number2Value: "", number3Value: "",
-                    bool1Value: false, bool2Value: false, bool3Value: false
-                });
                 onSuccess();
                 onClose();
             } else {
                 const errorData = await response.json();
-                alert(errorData.message || "Failed to create item.");
+                alert(errorData.message || "Failed to update item.");
             }
         } catch (error) {
             console.error("Error:", error);
@@ -68,12 +79,10 @@ export default function AddItemModal({ show, onClose, onSuccess, inventory }: Pr
         }
     };
 
-    // Helper for strings and numbers
     const handleValueChange = (field: string, value: string) => {
         setCustomValues(prev => ({ ...prev, [field]: value }));
     };
 
-    // Helper specifically for checkboxes
     const handleCheckboxChange = (field: string, checked: boolean) => {
         setCustomValues(prev => ({ ...prev, [field]: checked }));
     };
@@ -82,80 +91,61 @@ export default function AddItemModal({ show, onClose, onSuccess, inventory }: Pr
         <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', overflowY: 'auto' }}>
             <div className="modal-dialog modal-lg">
                 <div className="modal-content">
-                    <div className="modal-header bg-light">
-                        <h5 className="modal-title fw-bold">➕ Add Item to {inventory.title}</h5>
+                    <div className="modal-header bg-warning-subtle">
+                        <h5 className="modal-title fw-bold">✏️ Edit Item: {item.name}</h5>
                         <button type="button" className="btn-close" onClick={onClose}></button>
                     </div>
-                    
+
                     <div className="modal-body">
-                        <form id="add-item-form" onSubmit={handleSubmit}>
-                            {/* --- STANDARD FIELDS --- */}
-                            <div className="mb-4 border-bottom pb-3">
-                                <label className="form-label fw-bold">Item Name <span className="text-danger">*</span></label>
-                                <input type="text" className="form-control" required
-                                       value={name} onChange={e => setName(e.target.value)} 
-                                       placeholder="e.g., ThinkPad T14" />
-                            </div>
-                            <div className="mb-4 border-bottom pb-3">
-                                <label className="form-label fw-bold">Item Image (Optional)</label>
-                                {imageUrl ? (
-                                    <div className="position-relative mb-2" style={{ width: '150px' }}>
-                                        <img src={imageUrl} alt="Preview" className="img-thumbnail" />
-                                        <button type="button" className="btn btn-sm btn-danger position-absolute top-0 start-100 translate-middle" onClick={() => setImageUrl(null)}>X</button>
-                                    </div>
-                                ) : (
-                                    <ImageUpload onUploadSuccess={(url) => setImageUrl(url)} />
-                                )}
-                            </div>
-                            {/* --- DYNAMIC CUSTOM FIELDS --- */}
+                        <form id="edit-item-form" onSubmit={handleSubmit}>
                             <div className="row g-3">
-                                {/* Strings */}
+                                {/* 1. Strings */}
                                 {inventory.string1Name && (
                                     <div className="col-md-6">
                                         <label className="form-label fw-bold">{inventory.string1Name}</label>
-                                        <input type="text" className="form-control" 
+                                        <input type="text" className="form-control"
                                                value={customValues.string1Value} onChange={e => handleValueChange('string1Value', e.target.value)} />
                                     </div>
                                 )}
                                 {inventory.string2Name && (
                                     <div className="col-md-6">
                                         <label className="form-label fw-bold">{inventory.string2Name}</label>
-                                        <input type="text" className="form-control" 
+                                        <input type="text" className="form-control"
                                                value={customValues.string2Value} onChange={e => handleValueChange('string2Value', e.target.value)} />
                                     </div>
                                 )}
                                 {inventory.string3Name && (
                                     <div className="col-md-6">
                                         <label className="form-label fw-bold">{inventory.string3Name}</label>
-                                        <input type="text" className="form-control" 
+                                        <input type="text" className="form-control"
                                                value={customValues.string3Value} onChange={e => handleValueChange('string3Value', e.target.value)} />
                                     </div>
                                 )}
 
-                                {/* Numbers */}
+                                {/* 2. Numbers */}
                                 {inventory.number1Name && (
                                     <div className="col-md-6">
                                         <label className="form-label fw-bold">{inventory.number1Name}</label>
-                                        <input type="number" step="any" className="form-control" 
+                                        <input type="number" step="any" className="form-control"
                                                value={customValues.number1Value} onChange={e => handleValueChange('number1Value', e.target.value)} />
                                     </div>
                                 )}
                                 {inventory.number2Name && (
                                     <div className="col-md-6">
                                         <label className="form-label fw-bold">{inventory.number2Name}</label>
-                                        <input type="number" step="any" className="form-control" 
+                                        <input type="number" step="any" className="form-control"
                                                value={customValues.number2Value} onChange={e => handleValueChange('number2Value', e.target.value)} />
                                     </div>
                                 )}
                                 {inventory.number3Name && (
                                     <div className="col-md-6">
                                         <label className="form-label fw-bold">{inventory.number3Name}</label>
-                                        <input type="number" step="any" className="form-control" 
+                                        <input type="number" step="any" className="form-control"
                                                value={customValues.number3Value} onChange={e => handleValueChange('number3Value', e.target.value)} />
                                     </div>
                                 )}
 
-                                {/* Text Areas */}
+                                {/* 3. Text Areas */}
                                 {inventory.text1Name && (
                                     <div className="col-12">
                                         <label className="form-label fw-bold">{inventory.text1Name}</label>
@@ -178,7 +168,7 @@ export default function AddItemModal({ show, onClose, onSuccess, inventory }: Pr
                                     </div>
                                 )}
 
-                                {/* Booleans (Checkboxes) */}
+                                {/* 4. Booleans (Checkboxes) */}
                                 {inventory.bool1Name && (
                                     <div className="col-md-4 mt-4">
                                         <div className="form-check form-switch fs-5">
@@ -209,11 +199,11 @@ export default function AddItemModal({ show, onClose, onSuccess, inventory }: Pr
                             </div>
                         </form>
                     </div>
-                    
-                    <div className="modal-footer bg-light mt-4">
+
+                    <div className="modal-footer bg-light">
                         <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
-                        <button type="submit" form="add-item-form" className="btn btn-success px-4" disabled={isSubmitting}>
-                            {isSubmitting ? "Creating..." : "Save Item"}
+                        <button type="submit" form="edit-item-form" className="btn btn-warning px-4" disabled={isSubmitting}>
+                            {isSubmitting ? "Saving..." : "Update Item"}
                         </button>
                     </div>
                 </div>

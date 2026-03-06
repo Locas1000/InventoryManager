@@ -20,10 +20,12 @@ public class User
 
     public string Role { get; set; } = "User";
     
-    public string AuthProvider { get; set; }
+    public string AuthProvider { get; set; } = string.Empty;
     
     public string? ProviderKey { get; set; }
-
+    
+    public ICollection<ItemLike> LikedItems { get; set; } = new List<ItemLike>();
+    
     // Navigation property
     public List<Inventory> Inventories { get; set; } = new();
 }

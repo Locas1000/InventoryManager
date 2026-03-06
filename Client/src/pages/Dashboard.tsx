@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import CreateInventoryModal from '../components/CreateInventoryModal'; // Import the new component
 import { fetchWithAuth } from "../utils/api";
+
 interface Inventory {
     id: number;
     title: string;
     description: string;
     category: string;
     customIdTemplate: string;
+    imageUrl?: string | null;
 }
 
 export default function Dashboard() {
@@ -70,6 +72,14 @@ const fetchInventories = () => {
                     inventories.map((inv) => (
                         <div key={inv.id} className="col-md-4">
                             <div className="card h-100 shadow-sm border-0 bg-light">
+                                {inv.imageUrl && (
+                                    <img
+                                        src={inv.imageUrl}
+                                        alt={inv.title}
+                                        className="card-img-top object-fit-cover"
+                                        style={{ height: '200px' }}
+                                    />
+                                )}
                                 <div className="card-body">
                                     <div className="d-flex justify-content-between">
                                         <h5 className="card-title fw-bold">{inv.title}</h5>

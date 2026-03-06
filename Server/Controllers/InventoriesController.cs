@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Authorization; // Required for [Authorize]
+using Microsoft.AspNetCore.Authorization; 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Server.DTOs;
 using Server.Models;
-using System.Security.Claims; // Required to read the Token
+using System.Security.Claims; 
 
 namespace Server.Controllers;
 
@@ -20,26 +20,65 @@ public class InventoriesController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous] // Allowing everyone to view the dashboard list
     public async Task<ActionResult<IEnumerable<Inventory>>> GetInventories()
     {
-        // Optional: If you only want users to see THEIR own inventories, uncomment the next line:
-        // var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-
-        // For now, we'll return all, but we could filter by userId if we wanted.
         var inventories = await _context.Inventories.ToListAsync();
         return Ok(inventories);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Inventory>> GetInventory(int id)
+    [AllowAnonymous] // Ensures non-authenticated users can still view the inventory in read-only mode
+    public async Task<IActionResult> GetInventory(int id)
     {
+        // 1. Safely extract the current user ID. If they aren't logged in, it defaults to 0.
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        int.TryParse(userIdClaim, out int currentUserId);
+
+        // 2. Fetch the inventory and project exactly the fields the React frontend expects
         var inventory = await _context.Inventories
             .Include(i => i.Items)
-            .FirstOrDefaultAsync(i => i.Id == id);
+                .ThenInclude(item => item.Likes) // 🟢 CRITICAL: Pull in the join table
+            .Where(i => i.Id == id)
+            .Select(i => new 
+            {
+                i.Id,
+                i.UserId,
+                i.Title,
+                i.Description,
+                i.Category,
+                i.CustomIdTemplate,
+                i.ImageUrl,
+                
+                // Custom Field Definitions
+                i.String1Name, i.String2Name, i.String3Name,
+                i.Number1Name, i.Number2Name, i.Number3Name,
+                i.Text1Name, i.Text2Name, i.Text3Name,
+                i.Bool1Name, i.Bool2Name, i.Bool3Name,
+                
+                // Map the items
+                Items = i.Items.Select(item => new 
+                {
+                    item.Id,
+                    item.CustomId,
+                    item.Name,
+                    
+                    // Custom Field Values
+                    item.String1Value, item.String2Value, item.String3Value,
+                    item.Number1Value, item.Number2Value, item.Number3Value,
+                    item.Text1Value, item.Text2Value, item.Text3Value,
+                    item.Bool1Value, item.Bool2Value, item.Bool3Value,
+                    
+                    // 🟢 NEW: Calculate the like data on the fly
+                    TotalLikes = item.Likes.Count,
+                    CurrentUserLiked = currentUserId != 0 && item.Likes.Any(l => l.UserId == currentUserId)
+                }).ToList()
+            })
+            .FirstOrDefaultAsync();
 
         if (inventory == null)
         {
-            return NotFound();
+            return NotFound(new { message = "Inventory not found." });
         }
 
         return Ok(inventory);
@@ -49,7 +88,6 @@ public class InventoriesController : ControllerBase
     public async Task<ActionResult<Inventory>> CreateInventory(CreateInventoryDto dto)
     {
         // 1. GET USER ID FROM TOKEN
-        // The "User" object is available in every Controller because of [Authorize]
         var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
         
         if (string.IsNullOrEmpty(userIdString))
@@ -84,7 +122,6 @@ public class InventoriesController : ControllerBase
             ImageUrl = dto.ImageUrl
         };
 
-
         _context.Inventories.Add(inventory);
         await _context.SaveChangesAsync();
 
@@ -96,10 +133,6 @@ public class InventoriesController : ControllerBase
     {
         var inventory = await _context.Inventories.FindAsync(id);
         if (inventory == null) return NotFound("Inventory not found.");
-
-        // Optional: Check if the user OWNS this inventory before letting them edit it
-        // var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-        // if (inventory.UserId != userId) return Forbid();
 
         inventory.Title = dto.Title;
         inventory.Description = dto.Description;

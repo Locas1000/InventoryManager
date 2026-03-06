@@ -192,12 +192,30 @@ namespace Server.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
+                    b.Property<string>("imageUrl")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("InventoryId", "CustomId")
                         .IsUnique();
 
                     b.ToTable("Items");
+                });
+
+            modelBuilder.Entity("Server.Models.ItemLike", b =>
+                {
+                    b.Property<int>("ItemId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ItemId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ItemLikes");
                 });
 
             modelBuilder.Entity("Server.Models.User", b =>
@@ -257,14 +275,40 @@ namespace Server.Migrations
                     b.Navigation("Inventory");
                 });
 
+            modelBuilder.Entity("Server.Models.ItemLike", b =>
+                {
+                    b.HasOne("Server.Models.Item", "Item")
+                        .WithMany("Likes")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Server.Models.User", "User")
+                        .WithMany("LikedItems")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Server.Models.Inventory", b =>
                 {
                     b.Navigation("Items");
                 });
 
+            modelBuilder.Entity("Server.Models.Item", b =>
+                {
+                    b.Navigation("Likes");
+                });
+
             modelBuilder.Entity("Server.Models.User", b =>
                 {
                     b.Navigation("Inventories");
+
+                    b.Navigation("LikedItems");
                 });
 #pragma warning restore 612, 618
         }

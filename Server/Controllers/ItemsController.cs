@@ -3,6 +3,8 @@ using Server.DTOs;
 using Server.Models;
 using Server.Services; 
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Server.Controllers;
 
@@ -13,10 +15,122 @@ public class ItemsController : ControllerBase
     private readonly AppDbContext _context;
     private readonly CustomIdGenerator _idGenerator;
 
+    
     public ItemsController(AppDbContext context, CustomIdGenerator idGenerator)
     {
         _context = context;
         _idGenerator = idGenerator;
+    }
+    [HttpPut("{id}")]
+    [Authorize]
+    public async Task<IActionResult> UpdateItem(int id, [FromBody] UpdateItemDto dto)
+    {
+        
+        // 1. Find the existing item
+        var item = await _context.Items.FindAsync(id);
+        if (item == null)
+        {
+            return NotFound(new { message = "Item not found." });
+        }
+// 1. Get the inventory this item belongs to
+        var inventory = await _context.Inventories.FindAsync(item.InventoryId);
+    
+        // 2. Get the current user making the request
+        var currentUserIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        int.TryParse(currentUserIdStr, out int currentUserId);
+
+        // 3. Block them if they don't own the inventory
+        if (inventory == null || inventory.UserId != currentUserId)
+        {
+            return Forbid(); // Returns a 403 Forbidden status code
+        }
+        // Optional: Check if user has write access here later based on your auth rules
+
+        // 2. Update the standard fields
+        item.Name = dto.Name;
+        item.CustomId = dto.CustomId; // Custom IDs are editable 
+
+        item.imageUrl = dto.imageUrl;
+        // 3. Update the 12 dynamic custom fields
+        item.String1Value = dto.String1Value;
+        item.String2Value = dto.String2Value;
+        item.String3Value = dto.String3Value;
+    
+        item.Text1Value = dto.Text1Value;
+        item.Text2Value = dto.Text2Value;
+        item.Text3Value = dto.Text3Value;
+    
+        item.Number1Value = dto.Number1Value;
+        item.Number2Value = dto.Number2Value;
+        item.Number3Value = dto.Number3Value;
+    
+        item.Bool1Value = dto.Bool1Value;
+        item.Bool2Value = dto.Bool2Value;
+        item.Bool3Value = dto.Bool3Value;
+
+        // 4. Save and catch duplicates
+        try
+        {
+            await _context.SaveChangesAsync();
+            return Ok(item);
+        }
+        catch (DbUpdateException)
+        {
+            // If they enter a duplicate CustomID, the database will reject the item 
+            // We catch that crash here and return a friendly error to the React frontend
+            return BadRequest(new { message = "An item with this Custom ID already exists in this inventory." });
+        }
+    }
+    
+    [HttpPost("{itemId}/toggle-like")]
+    [Authorize] // Ensure only logged-in users can like items
+    public async Task<IActionResult> ToggleLike(int itemId)
+    {
+        // 1. Extract the UserId from the JWT Token
+        // Note: Make sure ClaimTypes.NameIdentifier matches how you generate your JWT in AuthController!
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        {
+            return Unauthorized(new { message = "Invalid or missing user token." });
+        }
+
+        // 2. Verify the item exists
+        var itemExists = await _context.Items.AnyAsync(i => i.Id == itemId);
+        if (!itemExists)
+        {
+            return NotFound(new { message = "Item not found." });
+        }
+
+        // 3. Check if the user has already liked this specific item
+        var existingLike = await _context.ItemLikes
+            .FirstOrDefaultAsync(il => il.ItemId == itemId && il.UserId == userId);
+
+        bool isLiked;
+
+        if (existingLike != null)
+        {
+            // User already liked it -> Remove the like
+            _context.ItemLikes.Remove(existingLike);
+            isLiked = false;
+        }
+        else
+        {
+            // User hasn't liked it -> Add the like
+            var newLike = new ItemLike
+            {
+                ItemId = itemId,
+                UserId = userId
+            };
+            _context.ItemLikes.Add(newLike);
+            isLiked = true;
+        }
+
+        await _context.SaveChangesAsync();
+
+        // 4. Return the updated status and the new total count to keep the frontend in sync
+        var totalLikes = await _context.ItemLikes.CountAsync(il => il.ItemId == itemId);
+
+        return Ok(new { isLiked = isLiked, totalLikes = totalLikes });
     }
     
     [HttpGet("{id}")]
@@ -26,7 +140,7 @@ public class ItemsController : ControllerBase
         if (item == null) return NotFound("Item not found.");
         return Ok(item);
     }
-[HttpPost]
+    [HttpPost]
     public async Task<ActionResult<Item>> CreateItem(CreateItemDto dto)
     {
         var inventory = await _context.Inventories.FindAsync(dto.InventoryId);
@@ -93,7 +207,18 @@ public class ItemsController : ControllerBase
         {
             return NotFound();
         }
+// 1. Get the inventory this item belongs to
+        var inventory = await _context.Inventories.FindAsync(item.InventoryId);
+    
+        // 2. Get the current user making the request
+        var currentUserIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        int.TryParse(currentUserIdStr, out int currentUserId);
 
+        // 3. Block them if they don't own the inventory
+        if (inventory == null || inventory.UserId != currentUserId)
+        {
+            return Forbid(); // Returns a 403 Forbidden status code
+        }
         // 3. Remove from the database
         _context.Items.Remove(item);
         

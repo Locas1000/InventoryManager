@@ -10,7 +10,8 @@ public class Item
 
     public int InventoryId { get; set; }
     public Inventory Inventory { get; set; } = null!;
-
+    public ICollection<ItemLike> Likes { get; set; } = new List<ItemLike>();
+    
     [Timestamp]
     public uint Version { get; set; }
 
@@ -37,4 +38,8 @@ public class Item
     public bool? Bool1Value { get; set; }
     public bool? Bool2Value { get; set; }
     public bool? Bool3Value { get; set; }
+    
+    //image
+    public string? imageUrl { get; set; }
+    
 }

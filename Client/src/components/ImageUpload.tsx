@@ -13,7 +13,7 @@ interface Props {
 export default function ImageUpload({ onUploadSuccess }: Props) {
     const cloudinaryRef = useRef<any>();
     const widgetRef = useRef<any>();
-    
+
     // 🟢 NEW: Store the function in a ref so it doesn't trigger re-renders
     const callbackRef = useRef(onUploadSuccess);
     useEffect(() => {
@@ -24,8 +24,8 @@ export default function ImageUpload({ onUploadSuccess }: Props) {
         // Initialize the widget once when the component loads
         cloudinaryRef.current = window.cloudinary;
         widgetRef.current = cloudinaryRef.current?.createUploadWidget({
-            cloudName: 'YOUR_CLOUD_NAME',      // (Make sure to paste your real cloud name back here!)
-            uploadPreset: 'YOUR_PRESET_NAME',  // (Make sure to paste your real preset back here!)
+            cloudName: 'dac4m7xrb ',
+            uploadPreset: 'Inventory_app',
             multiple: false,
             clientAllowedFormats: ['image'],
             maxFileSize: 5000000
@@ -38,9 +38,9 @@ export default function ImageUpload({ onUploadSuccess }: Props) {
     }, []); // 🟢 THE FIX: This empty array means it only runs ONCE, preventing the focus stealing!
 
     return (
-        <button 
-            type="button" 
-            className="btn btn-outline-secondary w-100" 
+        <button
+            type="button"
+            className="btn btn-outline-secondary w-100"
             onClick={() => widgetRef.current?.open()}
         >
             <i className="bi bi-cloud-arrow-up me-2"></i> Upload Image

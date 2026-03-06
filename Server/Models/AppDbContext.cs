@@ -11,10 +11,25 @@ public class AppDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<Inventory> Inventories => Set<Inventory>();
     public DbSet<Item> Items => Set<Item>();
-
+    
+    public DbSet<ItemLike> ItemLikes { get; set; }
     // This method is used to configure special database rules that can't be set with basic properties.
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<ItemLike>()
+            .HasKey(il => new { il.ItemId, il.UserId });
+
+        // Optional: explicitly define relationships if EF Core doesn't auto-wire them perfectly
+        modelBuilder.Entity<ItemLike>()
+            .HasOne(il => il.Item)
+            .WithMany(i => i.Likes)
+            .HasForeignKey(il => il.ItemId);
+
+        modelBuilder.Entity<ItemLike>()
+            .HasOne(il => il.User)
+            .WithMany(u => u.LikedItems)
+            .HasForeignKey(il => il.UserId);
+        
         // RULE 1: The course requires that Custom IDs are unique, but ONLY within the same inventory.
         // This creates a composite index in the database enforcing that rule.
         modelBuilder.Entity<Item>()
@@ -25,6 +40,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Item>()
             .Property(i => i.Version)
             .IsRowVersion();
+        
     }
 }
 
