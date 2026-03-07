@@ -38,7 +38,7 @@ public class InventoriesController : ControllerBase
         // 2. Fetch the inventory and project exactly the fields the React frontend expects
         var inventory = await _context.Inventories
             .Include(i => i.Items)
-                .ThenInclude(item => item.Likes) // 🟢 CRITICAL: Pull in the join table
+            .ThenInclude(item => item.Likes) // 🟢 CRITICAL: Pull in the join table
             .Where(i => i.Id == id)
             .Select(i => new 
             {
@@ -47,6 +47,7 @@ public class InventoriesController : ControllerBase
                 i.Title,
                 i.Description,
                 i.Category,
+                Tags = i.Tags.Select(t => t.Name),
                 i.CustomIdTemplate,
                 i.ImageUrl,
                 
@@ -121,7 +122,24 @@ public class InventoriesController : ControllerBase
             Bool3Name = dto.Bool3Name,
             ImageUrl = dto.ImageUrl
         };
-
+// 🟢 Process the Tags
+        var tagEntities = new List<Tag>();
+        foreach (var tagName in dto.Tags)
+        {
+            var cleanName = tagName.Trim().ToLower();
+            // Check if the tag already exists in the database
+            var existingTag = await _context.Tags.FirstOrDefaultAsync(t => t.Name == cleanName);
+            
+            if (existingTag != null)
+            {
+                tagEntities.Add(existingTag); // Use existing
+            }
+            else
+            {
+                tagEntities.Add(new Tag { Name = cleanName }); // Create new
+            }
+        }
+        inventory.Tags = tagEntities;
         _context.Inventories.Add(inventory);
         await _context.SaveChangesAsync();
 

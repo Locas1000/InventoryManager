@@ -22,6 +22,7 @@ interface Inventory {
     title: string;
     description: string;
     category: string;
+    tags?: string[];
     customIdTemplate: string;
     string1Name: string | null;
     string2Name: string | null;
@@ -153,6 +154,12 @@ export default function InventoryDetails() {
                         </nav>
                         <h1 className="display-6 fw-bold">{inventory.title}</h1>
                         <span className="badge bg-secondary me-2">{inventory.category}</span>
+                        {inventory.tags && inventory.tags.map(tag => (
+                            <span key={tag} className="badge bg-info text-dark me-2 fs-6 shadow-sm">
+                                    <i className="bi bi-tag-fill me-1 opacity-75"></i>
+                                {tag}
+                                </span>
+                        ))}
                         <p className="text-muted mt-2">{inventory.description}</p>
                     </div>
                 </div>

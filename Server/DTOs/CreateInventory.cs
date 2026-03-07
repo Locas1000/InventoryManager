@@ -31,4 +31,5 @@ public class CreateInventoryDto
     public string? Bool3Name { get; set; }
     
     public string? ImageUrl { get; set; }
+    public List<string> Tags { get; set; } = new();
 }

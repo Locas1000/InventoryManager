@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { fetchWithAuth } from "../utils/api";
 import CustomIdBuilder from "./CustomIdBuilder";
 import ImageUpload from "./ImageUpload";
-
+import TagInput from "./TagInput";
 interface Props {
     show: boolean;
     onClose: () => void;
@@ -15,6 +15,7 @@ export default function CreateInventoryModal({ show, onClose, onSuccess }: Props
     const [category, setCategory] = useState("Equipment");
     const [customIdTemplate, setCustomIdTemplate] = useState("FIXED:INV-|SEQ:D3");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [tags, setTags] = useState<string[]>([]);
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     // 🟢 NEW: State for the 12 custom field names
     const [customFields, setCustomFields] = useState({
@@ -37,7 +38,8 @@ export default function CreateInventoryModal({ show, onClose, onSuccess }: Props
             category, 
             customIdTemplate,
             imageUrl,
-            ...customFields
+            ...customFields,
+            tags
         };
 
         try {
@@ -105,7 +107,11 @@ export default function CreateInventoryModal({ show, onClose, onSuccess }: Props
                                         <option>Other</option>
                                     </select>
                                 </div>
-                             
+                                <div className="mb-3">
+                                    <label className="form-label fw-bold">Tags</label>
+                                    <TagInput selectedTags={tags} onChange={setTags} />
+                                    <div className="form-text">Press Enter after each tag.</div>
+                                </div>
                             </div>
                             <div className="mb-3">
                                 <label className="form-label fw-bold">Item Image (Optional)</label>
