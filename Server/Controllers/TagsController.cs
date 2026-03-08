@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Server.Models;
@@ -35,5 +36,23 @@ public class TagsController : ControllerBase
             .ToListAsync();
 
         return Ok(suggestions);
+    }
+    // GET: api/tags/cloud
+    [HttpGet("cloud")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetTagCloud()
+    {
+        // Find all tags that are actually attached to an inventory, count them, and sort by most popular
+        var tags = await _context.Tags
+            .Where(t => t.Inventories.Any()) 
+            .Select(t => new 
+            { 
+                Name = t.Name, 
+                Count = t.Inventories.Count 
+            })
+            .OrderByDescending(t => t.Count)
+            .ToListAsync();
+
+        return Ok(tags);
     }
 }

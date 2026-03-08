@@ -21,11 +21,34 @@ public class InventoriesController : ControllerBase
 
     [HttpGet]
     [AllowAnonymous] // Allowing everyone to view the dashboard list
-    public async Task<ActionResult<IEnumerable<Inventory>>> GetInventories()
+    public async Task<IActionResult> GetInventories([FromQuery] string? tag)
     {
-        var inventories = await _context.Inventories.ToListAsync();
+        var query = _context.Inventories.Include(i => i.Tags).AsQueryable();
+
+        // 🟢 NEW: If the React frontend asks for a specific tag, filter the database!
+        if (!string.IsNullOrWhiteSpace(tag))
+        {
+            var cleanTag = tag.ToLower();
+            query = query.Where(i => i.Tags.Any(t => t.Name == cleanTag));
+        }
+
+        // 🟢 Project the data so we include the Tags in the Dashboard response
+        var inventories = await query
+            .Select(i => new
+            {
+                i.Id,
+                i.Title,
+                i.Description,
+                i.Category,
+                i.ImageUrl,
+                Tags = i.Tags.Select(t => t.Name).ToList()
+            })
+            .OrderByDescending(i => i.Id)
+            .ToListAsync();
+
         return Ok(inventories);
     }
+
 
     [HttpGet("{id}")]
     [AllowAnonymous] // Ensures non-authenticated users can still view the inventory in read-only mode

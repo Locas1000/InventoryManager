@@ -4,6 +4,7 @@ import AddItemModal from "../components/AddItemModal";
 import { fetchWithAuth } from "../utils/api";
 import EditItemModal from "../components/EditItemModal";
 import ViewItemModal from "../components/ViewItemModal";
+import DiscussionBoard from "../components/DiscussionBoard";
 interface Item {
     id: number;
     customId: string;
@@ -313,8 +314,10 @@ export default function InventoryDetails() {
                     item={selectedItem}
                 />
             )}
-        </div> // <-- This is the closing div of your container
+            
+            <DiscussionBoard inventoryId={inventory.id} />
+        </div> // <-- The closing div of your main container
     );
 }
-
+    
         

@@ -14,6 +14,7 @@ public class Inventory
     public List<Tag> Tags { get; set; } = new();
     public int UserId { get; set; }
     public User User { get; set; } = null!;
+    public List<Comment> Comments { get; set; } = new();
     
     // Navigation Property: One Inventory has many Items.
     public ICollection<Item> Items { get; set; } = new List<Item>();
