@@ -22,6 +22,51 @@ namespace Server.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("InventoryTag", b =>
+                {
+                    b.Property<int>("InventoriesId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TagsId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("InventoriesId", "TagsId");
+
+                    b.HasIndex("TagsId");
+
+                    b.ToTable("InventoryTag");
+                });
+
+            modelBuilder.Entity("Server.Models.Comment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("InventoryId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InventoryId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Comments");
+                });
+
             modelBuilder.Entity("Server.Models.Inventory", b =>
                 {
                     b.Property<int>("Id")
@@ -218,6 +263,23 @@ namespace Server.Migrations
                     b.ToTable("ItemLikes");
                 });
 
+            modelBuilder.Entity("Server.Models.Tag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Tags");
+                });
+
             modelBuilder.Entity("Server.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -251,6 +313,40 @@ namespace Server.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("InventoryTag", b =>
+                {
+                    b.HasOne("Server.Models.Inventory", null)
+                        .WithMany()
+                        .HasForeignKey("InventoriesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Server.Models.Tag", null)
+                        .WithMany()
+                        .HasForeignKey("TagsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Server.Models.Comment", b =>
+                {
+                    b.HasOne("Server.Models.Inventory", "Inventory")
+                        .WithMany("Comments")
+                        .HasForeignKey("InventoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Server.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Inventory");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Server.Models.Inventory", b =>
@@ -296,6 +392,8 @@ namespace Server.Migrations
 
             modelBuilder.Entity("Server.Models.Inventory", b =>
                 {
+                    b.Navigation("Comments");
+
                     b.Navigation("Items");
                 });
 

@@ -81,7 +81,7 @@ public class AuthController : ControllerBase
         string token = CreateToken(user);
 
         // Return the token and the user info (so frontend knows who logged in)
-        return Ok(new { token, username = user.Username, userId = user.Id });
+        return Ok(new { token, username = user.Username, userId = user.Id,role = user.Role });
     }
 
 [HttpPost("google")]
@@ -101,7 +101,7 @@ public class AuthController : ControllerBase
 
             // 3. Generate your standard internal JWT
             string token = CreateToken(user);
-            return Ok(new { token, username = user.Username, userId = user.Id });
+            return Ok(new { token, username = user.Username, userId = user.Id, role = user.Role });
         }
         catch (InvalidJwtException)
         {
@@ -159,7 +159,7 @@ public class GithubAuthDto
 
             // 4. Generate your standard internal JWT
             string token = CreateToken(user);
-            return Ok(new { token, username = user.Username, userId = user.Id });
+            return Ok(new { token, username = user.Username, userId = user.Id, role = user.Role });
         }
         catch (Exception ex)
         {

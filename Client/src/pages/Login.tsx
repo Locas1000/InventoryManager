@@ -32,7 +32,7 @@ export default function Login() {
 
             const data = await response.json();
             localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify({ id: data.userId, username: data.username }));
+            localStorage.setItem('user', JSON.stringify({ id: data.userId, username: data.username, role: data.role }));
             navigate('/');
         } catch (err: any) {
             setError(err.message);
@@ -55,7 +55,7 @@ export default function Login() {
             if (res.ok) {
                 const data = await res.json();
                 localStorage.setItem('token', data.token);
-                localStorage.setItem('user', JSON.stringify({ id: data.userId, username: data.username }));
+                localStorage.setItem('user', JSON.stringify({ id: data.userId, username: data.username, role: data.role }));
                 navigate('/');
             } else {
                 console.error('Google login failed on backend');
@@ -77,7 +77,7 @@ export default function Login() {
             if (res.ok) {
                 const data = await res.json();
                 localStorage.setItem('token', data.token);
-                localStorage.setItem('user', JSON.stringify({ id: data.userId, username: data.username }));
+                localStorage.setItem('user', JSON.stringify({ id: data.userId, username: data.username, role: data.role }));
                 navigate('/');
             } else {
                 console.error('GitHub login failed on backend');
