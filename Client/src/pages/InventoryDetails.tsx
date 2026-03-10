@@ -84,7 +84,7 @@ export default function InventoryDetails() {
 
     const handleLikeToggle = async (itemId: number) => {
         try {
-            const response = await fetchWithAuth(`/api/items/${itemId}/toggle-like`, {
+            const response = await fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/items/${itemId}/toggle-like`, {
                 method: 'POST',
             });
             if (response.ok) {
