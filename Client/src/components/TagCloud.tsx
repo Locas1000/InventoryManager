@@ -15,7 +15,7 @@ export default function TagCloud({ selectedTag, onSelectTag }: Props) {
 
     useEffect(() => {
         // Fetch the most popular tags from our new endpoint
-        fetch('/api/tags/cloud')
+        fetch('https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/tags/cloud')
             .then(res => res.json())
             .then(data => setTags(data))
             .catch(err => console.error("Error fetching tag cloud:", err));
