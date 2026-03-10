@@ -34,6 +34,9 @@ jobs:
           output_location: "dist" # Built app content directory - optional
         env:
             NPM_CONFIG_LEGACY_PEER_DEPS: true
+            VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+            VITE_GITHUB_CLIENT_ID: ${{ secrets.VITE_GITHUB_CLIENT_ID }}
+            
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
