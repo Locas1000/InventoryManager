@@ -19,7 +19,7 @@ export default function Login() {
         setIsLoading(true);
 
         try {
-            const response = await fetch('/api/Auth/login', {
+            const response = await fetch('https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/Auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })

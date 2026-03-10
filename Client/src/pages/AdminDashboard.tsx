@@ -33,7 +33,7 @@ export default function AdminDashboard() {
     const currentUserId = Number(currentUser?.id || currentUser?.Id || currentUser?.userId || currentUser?.UserId);
 
     const loadData = useCallback(() => {
-        fetchWithAuth("/api/admin/dashboard")
+        fetchWithAuth("https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/admin/dashboard")
             .then(async (res) => {
                 if (res.status === 403) throw new Error("Access Denied: You do not have admin privileges.");
                 if (!res.ok) throw new Error("Failed to load admin data.");
@@ -100,7 +100,7 @@ export default function AdminDashboard() {
         if (!window.confirm("Are you sure you want to permanently delete this user? This action cannot be undone.")) return;
 
         try {
-            const res = await fetchWithAuth(`/api/admin/users/${targetId}`, { method: "DELETE" });
+            const res = await fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/admin/users/${targetId}`, { method: "DELETE" });
             if (res.ok) {
                 loadData();
             } else {

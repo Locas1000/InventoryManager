@@ -26,7 +26,7 @@ export default function Dashboard() {
     // We moved the fetch logic into a function so we can call it again later
     const fetchInventories = useCallback(() => {
         setIsLoading(true); // Optional: shows spinner when filtering
-        let url = '/api/inventories';
+        let url = 'https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/inventories';
         if (selectedTag) {
             url += `?tag=${encodeURIComponent(selectedTag)}`;
         }

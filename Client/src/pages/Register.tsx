@@ -18,7 +18,7 @@ export default function Register() {
 
         try {
             // We use standard fetch here because we don't have a token yet!
-            const response = await fetch('/api/Auth/register', {
+            const response = await fetch('https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/Auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, email, password })

@@ -46,7 +46,7 @@ export default function InventoryDetails() {
     const currentUserId = currentUser ? Number(currentUser.id) : null;
     const hasWriteAccess = inventory && currentUserId === inventory.userId;
     const fetchInventory = useCallback(() => {
-        fetchWithAuth(`/api/inventories/${id}`)
+        fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/inventories/${id}`)
             .then(res => {
                 if (!res.ok) throw new Error("Inventory not found");
                 return res.json();
@@ -68,7 +68,7 @@ export default function InventoryDetails() {
     const handleDelete = async (itemId: number) => {
         if (!window.confirm("Are you sure you want to delete this item?")) return;
         try {
-            const response = await fetchWithAuth(`/api/items/${itemId}`, {
+            const response = await fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/items/${itemId}`, {
                 method: 'DELETE',
             });
             if (response.ok) {
