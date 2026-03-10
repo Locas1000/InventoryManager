@@ -29,7 +29,7 @@ export default function DiscussionBoard({ inventoryId }: Props) {
     const currentUserId = currentUser ? Number(currentUser.id) : null;
     const fetchComments = useCallback(async () => {
         try {
-            const res = await fetch(`/api/inventories/${inventoryId}/comments`);
+            const res = await fetch(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/inventories/${inventoryId}/comments`);
             if (res.ok) {
                 const data = await res.json();
                 setComments(data);

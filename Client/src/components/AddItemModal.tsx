@@ -40,7 +40,7 @@ export default function AddItemModal({ show, onClose, onSuccess, inventory }: Pr
         };
 
         try {
-            const response = await fetchWithAuth('/api/items', {
+            const response = await fetchWithAuth('https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/items', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newItem)

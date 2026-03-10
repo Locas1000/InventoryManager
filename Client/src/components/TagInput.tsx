@@ -23,7 +23,7 @@ export default function TagInput({ selectedTags, onChange }: Props) {
 
         debounceTimeout.current = setTimeout(async () => {
             try {
-                const res = await fetch(`/api/tags/search?q=${encodeURIComponent(inputValue)}`);
+                const res = await fetch(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/tags/search?q=${encodeURIComponent(inputValue)}`);
                 if (res.ok) {
                     const data = await res.json();
                     // Filter out tags we already selected

@@ -43,7 +43,7 @@ export default function CreateInventoryModal({ show, onClose, onSuccess }: Props
         };
 
         try {
-            const response = await fetchWithAuth('/api/inventories', {
+            const response = await fetchWithAuth('https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/inventories', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newInventory)
