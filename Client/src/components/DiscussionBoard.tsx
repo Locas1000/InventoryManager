@@ -49,7 +49,7 @@ export default function DiscussionBoard({ inventoryId }: Props) {
 
         setIsSubmitting(true);
         try {
-            const res = await fetchWithAuth(`/api/inventories/${inventoryId}/comments`, {
+            const res = await fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/inventories/${inventoryId}/comments`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ text: newComment })
@@ -70,7 +70,7 @@ export default function DiscussionBoard({ inventoryId }: Props) {
     const handleDelete = async (commentId: number) => {
         if (!window.confirm("Are you sure you want to delete this comment?")) return;
         try {
-            const res = await fetchWithAuth(`/api/inventories/${inventoryId}/comments/${commentId}`, {
+            const res = await fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/inventories/${inventoryId}/comments/${commentId}`, {
                 method: "DELETE"
             });
             if (res.ok) fetchComments();
@@ -83,7 +83,7 @@ export default function DiscussionBoard({ inventoryId }: Props) {
     const handleSaveEdit = async (commentId: number) => {
         if (!editContent.trim()) return;
         try {
-            const res = await fetchWithAuth(`/api/inventories/${inventoryId}/comments/${commentId}`, {
+            const res = await fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/inventories/${inventoryId}/comments/${commentId}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ text: editContent })

@@ -33,7 +33,7 @@ export default function SearchResults() {
         if (!query.trim()) return;
 
         setIsLoading(true);
-        fetch(`/api/search?q=${encodeURIComponent(query)}`)
+        fetch(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/search?q=${encodeURIComponent(query)}`)
             .then(res => res.json())
             .then(data => {
                 setResults(data);

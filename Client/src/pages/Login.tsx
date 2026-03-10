@@ -138,7 +138,7 @@ return (
                             onFailure={(res) => console.error('GitHub Login Failed', res)}
                             className="btn btn-dark w-100"
                             buttonText="Login with GitHub"
-                            redirectUri="http://localhost:5173/login" 
+                            redirectUri="https://orange-smoke-0ae62950f.6.azurestaticapps.net/login" 
                         />
                     </div>
                     

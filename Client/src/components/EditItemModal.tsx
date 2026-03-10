@@ -59,7 +59,7 @@ export default function EditItemModal({ show, onClose, onSuccess, inventory, ite
         };
 
         try {
-            const response = await fetchWithAuth(`inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/items/${item.id}`, {
+            const response = await fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/items/${item.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedItem)
