@@ -24,7 +24,7 @@ export default function ImageUpload({ onUploadSuccess }: Props) {
         // Initialize the widget once when the component loads
         cloudinaryRef.current = window.cloudinary;
         widgetRef.current = cloudinaryRef.current?.createUploadWidget({
-            cloudName: 'dac4m7xrb ',
+            cloudName: 'dac4m7xrb',
             uploadPreset: 'Inventory_app',
             multiple: false,
             clientAllowedFormats: ['image'],
