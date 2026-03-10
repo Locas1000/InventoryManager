@@ -26,5 +26,5 @@ public class UpdateItemDto
     public bool Bool3Value { get; set; }
     
     //image
-    public string? imageUrl { get; set; }
+    public string? ImageUrl { get; set; }
 }

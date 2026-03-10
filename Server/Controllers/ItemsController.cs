@@ -50,7 +50,7 @@ public class ItemsController : ControllerBase
         item.Name = dto.Name;
         item.CustomId = dto.CustomId; // Custom IDs are editable 
 
-        item.imageUrl = dto.imageUrl;
+        item.ImageUrl = dto.ImageUrl;
         // 3. Update the 12 dynamic custom fields
         item.String1Value = dto.String1Value;
         item.String2Value = dto.String2Value;
@@ -156,6 +156,7 @@ public class ItemsController : ControllerBase
             Name = dto.Name,
             InventoryId = dto.InventoryId,
             CustomId = generatedId,
+            ImageUrl = dto.ImageUrl,
     
             // 🟢 Map the Custom Field Values
             String1Value = dto.String1Value,

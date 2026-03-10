@@ -86,7 +86,7 @@ public class InventoriesController : ControllerBase
                     item.Id,
                     item.CustomId,
                     item.Name,
-                    
+                    item.ImageUrl,
                     // Custom Field Values
                     item.String1Value, item.String2Value, item.String3Value,
                     item.Number1Value, item.Number2Value, item.Number3Value,

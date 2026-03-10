@@ -35,5 +35,5 @@ public class CreateItemDto
     public bool? Bool3Value { get; set; }
     
     //image
-    public string? imageUrl { get; set; }
+    public string? ImageUrl { get; set; }
 }
