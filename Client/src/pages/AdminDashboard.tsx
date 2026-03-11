@@ -67,7 +67,7 @@ export default function AdminDashboard() {
         }
 
         try {
-            const res = await fetchWithAuth(`/api/admin/users/${targetId}/role`, {
+            const res = await fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/admin/users/${targetId}/role`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ role: newRole })

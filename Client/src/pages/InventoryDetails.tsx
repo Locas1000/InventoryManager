@@ -15,7 +15,7 @@ interface Item {
     number1Value: number | null;
     totalLikes?: number;
     currentUserLiked?: boolean;
-    userId:number;
+    userId: number;
 }
 
 interface Inventory {
@@ -29,8 +29,17 @@ interface Inventory {
     string2Name: string | null;
     string3Name: string | null;
     number1Name: string | null;
+    number2Name?: string | null;
+    number3Name?: string | null;
+    text1Name?: string | null;
+    text2Name?: string | null;
+    text3Name?: string | null;
+    bool1Name?: string | null;
+    bool2Name?: string | null;
+    bool3Name?: string | null;
     items: Item[];
     imageUrl?: string | null;
+    userId: number;
 }
 
 export default function InventoryDetails() {
@@ -38,13 +47,15 @@ export default function InventoryDetails() {
     const [inventory, setInventory] = useState<Inventory | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [showAddItemModal, setShowAddItemModal] = useState(false);
-    const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+    const [selectedItems, setSelectedItems] = useState<number[]>([]);
+    const [itemToView, setItemToView] = useState<Item | null>(null);
     const [showEditModal, setShowEditModal] = useState(false);
-    const [showViewModal, setShowViewModal] = useState(false); // 🟢 2. Add this state
+    const [showViewModal, setShowViewModal] = useState(false);
     const userString = localStorage.getItem('user');
     const currentUser = userString ? JSON.parse(userString) : null;
     const currentUserId = currentUser ? Number(currentUser.id) : null;
-    const hasWriteAccess = inventory && currentUserId === inventory.userId;
+    // An admin or the inventory owner has write access
+    const hasWriteAccess = inventory && (currentUserId === inventory.userId || !!currentUser?.isAdmin);
     const fetchInventory = useCallback(() => {
         fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/inventories/${id}`)
             .then(res => {
@@ -65,20 +76,26 @@ export default function InventoryDetails() {
         fetchInventory();
     }, [fetchInventory]);
 
-    const handleDelete = async (itemId: number) => {
-        if (!window.confirm("Are you sure you want to delete this item?")) return;
+    const handleDeleteSelected = async () => {
+        if (selectedItems.length === 0) return;
+        if (!window.confirm(`Are you sure you want to delete ${selectedItems.length} selected item(s)?`)) return;
+
         try {
-            const response = await fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/items/${itemId}`, {
-                method: 'DELETE',
-            });
-            if (response.ok) {
-                setSelectedItem(null); // 🟢 Clear the selection after deleting!
+            const deletePromises = selectedItems.map(itemId =>
+                fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/items/${itemId}`, {
+                    method: 'DELETE',
+                })
+            );
+            const responses = await Promise.all(deletePromises);
+
+            if (responses.every(res => res.ok)) {
+                setSelectedItems([]);
                 fetchInventory();
             } else {
-                alert("Failed to delete item.");
+                alert("Failed to delete one or more items.");
             }
         } catch (error) {
-            console.error("Error deleting item:", error);
+            console.error("Error deleting items:", error);
         }
     };
 
@@ -136,8 +153,8 @@ export default function InventoryDetails() {
 
     return (
         <div className="container mt-5">
-            <div className="d-flex justify-content-between align-items-start mb-4">
-                <div className="d-flex gap-4 align-items-start">
+            <div className="d-flex flex-column flex-lg-row justify-content-lg-between align-items-lg-start mb-4">
+                <div className="d-flex gap-4 align-items-start mb-3 mb-lg-0">
                     {inventory.imageUrl && (
                         <img
                             src={inventory.imageUrl}
@@ -165,40 +182,34 @@ export default function InventoryDetails() {
                     </div>
                 </div>
 
-
-                <div className="d-flex gap-2 align-items-center">
-                    {/* RIGHT SIDE: Action Buttons (Only show if they have access) */}
+                {/* Action Buttons */}
+                <div className="d-flex flex-wrap justify-content-start justify-content-lg-end gap-2">
                     {hasWriteAccess && (
-                        <div className="d-flex gap-2 align-items-center">
+                        <>
                             <button
                                 className="btn btn-outline-primary"
-                                disabled={!selectedItem}
+                                disabled={selectedItems.length !== 1}
                                 onClick={() => setShowEditModal(true)}
                             >
                                 <i className="bi bi-pencil me-1"></i> Edit Selected
                             </button>
-
                             <button
                                 className="btn btn-outline-danger"
-                                disabled={!selectedItem}
-                                onClick={() => selectedItem && handleDelete(selectedItem.id)}
+                                disabled={selectedItems.length === 0}
+                                onClick={handleDeleteSelected}
                             >
-                                <i className="bi bi-trash me-1"></i> Delete
+                                <i className="bi bi-trash me-1"></i> Delete Selected
                             </button>
-                        </div>
+                            <button
+                                className="btn btn-primary text-nowrap"
+                                onClick={() => setShowAddItemModal(true)}
+                            >
+                                <i className="bi bi-plus-lg me-1"></i> Add New Item
+                            </button>
+                        </>
                     )}
-
-
-                    {hasWriteAccess && (
-                        <button
-                            className="btn btn-primary btn-lg text-nowrap"
-                            onClick={() => setShowAddItemModal(true)}
-                        >
-                            + Add New Item
-                        </button>
-                    )}
-
-                </div>            </div>
+                </div>
+            </div>
 
 
             <div className="card shadow-sm border-0">
@@ -206,8 +217,21 @@ export default function InventoryDetails() {
                     <table className="table table-hover mb-0 align-middle">
                         <thead className="table-light">
                         <tr>
-                            {/* 🟢 NEW: Empty header for the checkbox column */}
-                            <th style={{ width: '40px' }}></th>
+                            <th style={{ width: '40px' }}>
+                                <div className="form-check d-flex justify-content-center">
+                                    <input
+                                        className="form-check-input border-secondary"
+                                        type="checkbox"
+                                        style={{ cursor: "pointer" }}
+                                        disabled={inventory.items.length === 0}
+                                        checked={inventory.items.length > 0 && selectedItems.length === inventory.items.length}
+                                        onChange={() => {
+                                            if (selectedItems.length === inventory.items.length) setSelectedItems([]);
+                                            else setSelectedItems(inventory.items.map(i => i.id));
+                                        }}
+                                    />
+                                </div>
+                            </th>
 
                             {columns.map(col => (
                                 <th key={col.key}>{col.label}</th>
@@ -219,7 +243,6 @@ export default function InventoryDetails() {
 
                         {inventory.items.length === 0 ? (
                             <tr>
-                                {/* 🟢 Adjusted colSpan to account for the new checkbox column (+2) */}
                                 <td colSpan={columns.length + 2} className="text-center py-5 text-muted">
                                     <h4>📭 This inventory is empty</h4>
                                     <p>Click the blue button to add your first item!</p>
@@ -229,20 +252,21 @@ export default function InventoryDetails() {
                             inventory.items.map(item => (
                                 <tr
                                     key={item.id}
-                                    // 🟢 We keep the blue highlight, but removed the onClick from the row itself
-                                    className={selectedItem?.id === item.id ? "table-primary" : ""}
+                                    className={selectedItems.includes(item.id) ? "table-primary" : ""}
                                 >
-                                    {/* 🟢 NEW: Checkbox Cell */}
                                     <td>
                                         <div className="form-check d-flex justify-content-center">
                                             <input
                                                 className="form-check-input border-secondary"
                                                 type="checkbox"
                                                 style={{ cursor: "pointer", width: '1.2rem', height: '1.2rem' }}
-                                                checked={selectedItem?.id === item.id}
+                                                checked={selectedItems.includes(item.id)}
                                                 onChange={() => {
-                                                    // If it's already selected, uncheck it (set to null). Otherwise, select it.
-                                                    setSelectedItem(selectedItem?.id === item.id ? null : item);
+                                                    setSelectedItems(prev =>
+                                                        prev.includes(item.id)
+                                                            ? prev.filter(id => id !== item.id)
+                                                            : [...prev, item.id]
+                                                    );
                                                 }}
                                             />
                                         </div>
@@ -253,12 +277,12 @@ export default function InventoryDetails() {
                                         <td key={col.key}>
                                             {col.key === 'customId' ? (
                                                 <span className="fw-bold font-monospace text-primary">{item.customId}
-                                                </span>) : col.key === 'name' ? (
-                                                /* 🟢 NEW: Your clickable name snippet goes right here! */
+                                                </span>
+                                            ) : col.key === 'name' ? (
                                                 <span
                                                     className="fw-bold text-primary text-decoration-underline"
                                                     style={{ cursor: "pointer" }}
-                                                    onClick={() => { setSelectedItem(item); setShowViewModal(true); }}
+                                                    onClick={() => { setItemToView(item); setShowViewModal(true); }}
                                                 >
             {String(item[col.key])}
         </span>
@@ -302,21 +326,24 @@ export default function InventoryDetails() {
             <EditItemModal
                 show={showEditModal}
                 onClose={() => setShowEditModal(false)}
-                onSuccess={fetchInventory}
+                onSuccess={() => {
+                    fetchInventory();
+                    setSelectedItems([]);
+                }}
                 inventory={inventory}
-                item={selectedItem}
+                item={inventory.items.find(i => i.id === selectedItems[0]) || null}
             />
             {inventory && (
                 <ViewItemModal
                     show={showViewModal}
-                    onClose={() => setShowViewModal(false)}
+                    onClose={() => { setShowViewModal(false); setItemToView(null); }}
                     inventory={inventory}
-                    item={selectedItem}
+                    item={itemToView}
                 />
             )}
             
             <DiscussionBoard inventoryId={inventory.id} />
-        </div> // <-- The closing div of your main container
+        </div>
     );
 }
     

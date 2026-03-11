@@ -6,6 +6,7 @@ export default function Register() {
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -14,6 +15,12 @@ export default function Register() {
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
+
+        if (password !== confirmPassword) {
+            setError("Passwords do not match.");
+            return;
+        }
+
         setIsLoading(true);
 
         try {
@@ -72,7 +79,7 @@ export default function Register() {
                                         required
                                     />
                                 </div>
-                                <div className="mb-4">
+                                <div className="mb-3">
                                     <label className="form-label text-muted">Password</label>
                                     <input
                                         type="password"
@@ -81,6 +88,16 @@ export default function Register() {
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
                                         minLength={6}
+                                    />
+                                </div>
+                                <div className="mb-4">
+                                    <label className="form-label text-muted">Re-enter Password</label>
+                                    <input
+                                        type="password"
+                                        className="form-control form-control-lg"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        required
                                     />
                                 </div>
                                 <button

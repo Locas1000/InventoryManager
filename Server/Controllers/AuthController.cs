@@ -23,7 +23,7 @@ public class AuthController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly IConfiguration _configuration;
-    private readonly HttpClient _httpClient; // needed for facebook api call
+    private readonly HttpClient _httpClient;
 
     public AuthController(AppDbContext context, IConfiguration configuration, HttpClient httpClient)
     {
@@ -35,8 +35,9 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<ActionResult<User>> Register(RegisterDto request)
     {
+        var lowerCaseEmail = request.Email.ToLowerInvariant();
         // 1. Check if user already exists
-        if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+        if (await _context.Users.AnyAsync(u => u.Email == lowerCaseEmail))
         {
             return BadRequest("User already exists.");
         }
@@ -48,7 +49,7 @@ public class AuthController : ControllerBase
         var user = new User
         {
             Username = request.Username,
-            Email = request.Email,
+            Email = lowerCaseEmail,
             PasswordHash = passwordHash, // Ensure your User model has this property!
             Role = "User",// Default role
             AuthProvider = "Local"
@@ -63,8 +64,9 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<ActionResult<string>> Login(LoginDto request)
     {
+        var lowerCaseEmail = request.Email.ToLowerInvariant();
         // 1. Find user by email
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == lowerCaseEmail);
         
         if (user == null)
         {
@@ -170,13 +172,14 @@ public class GithubAuthDto
     //   Helper method to handle social user creation
     private async Task<User> GetOrCreateSocialUserAsync(string email, string name, string provider, string providerKey)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        var lowerCaseEmail = email.ToLowerInvariant();
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == lowerCaseEmail);
 
         if (user == null)
         {
             user = new User
             {
-                Email = email,
+                Email = lowerCaseEmail,
                 Username = name.Replace(" ", ""), // Clean up spaces for the username
                 PasswordHash = null, // No password!
                 Role = "User",

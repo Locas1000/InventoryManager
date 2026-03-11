@@ -28,7 +28,7 @@ export default function Navbar() {
             <div className="container">
                 <Link className="navbar-brand fw-bold" to="/">
                     <i className="bi bi-box-seam me-2"></i>
-                    FixIt Campus
+                    Inventory Manager 
                 </Link>
 
                 {/* Left Side Links */}
