@@ -70,10 +70,9 @@ export default function InventoryDetails() {
     const userString = localStorage.getItem('user');
     const currentUser = userString ? JSON.parse(userString) : null;
     const currentUserId = currentUser ? Number(currentUser.id) : null;
-    
     const isOwnerOrAdmin = inventory && (currentUserId === inventory.userId || currentUser?.role === 'Admin');
-    const hasWriteAccess = isOwnerOrAdmin || inventory?.isPublic; // Backend enforces explicit access list
-
+    const hasWriteAccess = isOwnerOrAdmin || inventory?.isPublic || inventory?.allowedUsers?.some((u: any) => u.id === currentUserId);
+    
     const fetchInventory = useCallback(() => {
         fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/inventories/${id}`)
             .then(res => {
@@ -127,10 +126,29 @@ export default function InventoryDetails() {
                 })
                 .catch(err => console.error("Auto-save failed", err));
             }
-        }, 8000);
+        }, 1000);
         return () => clearInterval(timer);
     }, [isDirty, formData, id, isOwnerOrAdmin]);
 
+    const handleGrantAccess = async (targetUserId: number) => {
+        try {
+            const res = await fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/inventories/${id}/access/${targetUserId}`, { method: 'POST' });
+            if (res.ok) {
+                setSearchResults([]); // Clear search box
+                setSearchQuery('');
+                fetchInventory(); // Refresh to show new user in the list
+            }
+        } catch (error) { console.error(error); }
+    };
+
+    // 🟢 Handle Removing Access
+    const handleRevokeAccess = async (targetUserId: number) => {
+        try {
+            const res = await fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/inventories/${id}/access/${targetUserId}`, { method: 'DELETE' });
+            if (res.ok) fetchInventory(); // Refresh to remove user from list
+        } catch (error) { console.error(error); }
+    };
+    
     const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
@@ -367,6 +385,7 @@ export default function InventoryDetails() {
             )}
 
             {/* TAB 5: ACCESS CONTROL (Owner/Admin Only) */}
+          {/* TAB 5: ACCESS CONTROL (Owner/Admin Only) */}
             {activeTab === 'access' && isOwnerOrAdmin && (
                 <div className="row">
                     <div className="col-md-6">
@@ -383,12 +402,31 @@ export default function InventoryDetails() {
                             <div className="card shadow-sm border-0 p-4">
                                 <h4 className="mb-3">Grant Write Access</h4>
                                 <input type="text" className="form-control mb-3" placeholder="Search users by name or email..." value={searchQuery} onChange={handleUserSearch} />
+                                
+                                {/* Search Results */}
                                 {searchResults.length > 0 && (
-                                    <ul className="list-group">
+                                    <ul className="list-group mb-4">
                                         {searchResults.map(u => (
-                                            <li key={u.id} className="list-group-item d-flex justify-content-between align-items-center">
-                                                {u.username} <small className="text-muted">{u.email}</small>
-                                                <button className="btn btn-sm btn-outline-success">+ Add</button>
+                                            <li key={`search-${u.id}`} className="list-group-item d-flex justify-content-between align-items-center bg-light">
+                                                <span><i className="bi bi-person me-2"></i>{u.username} <small className="text-muted">({u.email})</small></span>
+                                                <button type="button" className="btn btn-sm btn-success" onClick={() => handleGrantAccess(u.id)}>+ Add</button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+
+                                {/* Current Allowed Users */}
+                                <h5 className="mt-4 border-bottom pb-2">Users with Access</h5>
+                                {inventory?.allowedUsers?.length === 0 ? (
+                                    <p className="text-muted mt-2">No specific users have been granted access yet.</p>
+                                ) : (
+                                    <ul className="list-group">
+                                        {inventory?.allowedUsers?.map((u: any) => (
+                                            <li key={`allowed-${u.id}`} className="list-group-item d-flex justify-content-between align-items-center">
+                                                <span><i className="bi bi-person-check-fill text-primary me-2"></i>{u.username}</span>
+                                                <button className="btn btn-sm btn-outline-danger" onClick={() => handleRevokeAccess(u.id)}>
+                                                    <i className="bi bi-x-lg"></i> Remove
+                                                </button>
                                             </li>
                                         ))}
                                     </ul>

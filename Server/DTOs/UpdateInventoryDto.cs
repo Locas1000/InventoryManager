@@ -8,6 +8,8 @@ public class UpdateInvetoryDto
     public string CustomIdTemplate { get; set; } = string.Empty;
 
     // --- CUSTOM FIELD NAMES (Optional) ---
+    
+    public bool IsPublic { get; set; } = false;
     public string? String1Name { get; set; }
     public string? String2Name { get; set; }
     public string? String3Name { get; set; }

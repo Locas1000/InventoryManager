@@ -4,6 +4,8 @@ public class UpdateItemDto
 {
     public string Name { get; set; } = string.Empty;
     public string CustomId { get; set; } = string.Empty;
+    
+    public bool IsPublic { get; set; } = false;
 
     // 1. Single-Line Strings
     public string? String1Value { get; set; }

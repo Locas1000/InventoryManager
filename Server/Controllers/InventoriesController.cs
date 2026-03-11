@@ -25,23 +25,23 @@ public class InventoriesController : ControllerBase
     {
         var query = _context.Inventories.Include(i => i.Tags).AsQueryable();
 
-        // 🟢 NEW: If the React frontend asks for a specific tag, filter the database!
         if (!string.IsNullOrWhiteSpace(tag))
         {
             var cleanTag = tag.ToLower();
             query = query.Where(i => i.Tags.Any(t => t.Name == cleanTag));
         }
 
-        // 🟢 Project the data so we include the Tags in the Dashboard response
         var inventories = await query
             .Select(i => new
             {
                 i.Id,
+                i.UserId, // 🟢 FIXED: The dashboard now receives the UserId!
                 i.Title,
                 i.Description,
                 i.Category,
                 i.ImageUrl,
-                Tags = i.Tags.Select(t => t.Name).ToList()
+                Tags = i.Tags.Select(t => t.Name).ToList(),
+                AllowedUsers = i.AllowedUsers.Select(a => new { a.User.Id, a.User.Username, a.User.Email })
             })
             .OrderByDescending(i => i.Id)
             .ToListAsync();
@@ -49,8 +49,7 @@ public class InventoriesController : ControllerBase
         return Ok(inventories);
     }
 
-
-   [HttpGet("{id}")]
+    [HttpGet("{id}")]
     [AllowAnonymous] 
     public async Task<IActionResult> GetInventory(int id)
     {
@@ -60,6 +59,9 @@ public class InventoriesController : ControllerBase
         var inventory = await _context.Inventories
             .Include(i => i.Items)
             .ThenInclude(item => item.Likes) 
+            // 🟢 ADD THESE TWO LINES SO THE DATABASE FETCHES THE USERS:
+            .Include(i => i.AllowedUsers)
+            .ThenInclude(a => a.User)
             .Where(i => i.Id == id)
             .Select(i => new 
             {
@@ -68,12 +70,11 @@ public class InventoriesController : ControllerBase
                 i.Title,
                 i.Description,
                 i.Category,
-                i.IsPublic, // 🟢 PHASE 2: Expose public status to React
+                i.IsPublic, 
                 Tags = i.Tags.Select(t => t.Name),
                 i.CustomIdTemplate,
                 i.ImageUrl,
                 
-                // Custom Field Definitions
                 i.String1Name, i.String2Name, i.String3Name,
                 i.Number1Name, i.Number2Name, i.Number3Name,
                 i.Text1Name, i.Text2Name, i.Text3Name,
@@ -103,17 +104,12 @@ public class InventoriesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Inventory>> CreateInventory(CreateInventoryDto dto)
     {
-        // 1. GET USER ID FROM TOKEN
         var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
         
-        if (string.IsNullOrEmpty(userIdString))
-        {
-            return Unauthorized("User ID not found in token.");
-        }
+        if (string.IsNullOrEmpty(userIdString)) return Unauthorized("User ID not found in token.");
 
         int userId = int.Parse(userIdString);
 
-        // 2. Create the Inventory using the REAL User ID
         var inventory = new Inventory
         {
             Title = dto.Title,
@@ -122,37 +118,21 @@ public class InventoriesController : ControllerBase
             CustomIdTemplate = dto.CustomIdTemplate,
             UserId = userId,
     
-            // 🟢 Map the Custom Field Names
-            String1Name = dto.String1Name,
-            String2Name = dto.String2Name,
-            String3Name = dto.String3Name,
-            Text1Name = dto.Text1Name,
-            Text2Name = dto.Text2Name,
-            Text3Name = dto.Text3Name,
-            Number1Name = dto.Number1Name,
-            Number2Name = dto.Number2Name,
-            Number3Name = dto.Number3Name,
-            Bool1Name = dto.Bool1Name,
-            Bool2Name = dto.Bool2Name,
-            Bool3Name = dto.Bool3Name,
+            String1Name = dto.String1Name, String2Name = dto.String2Name, String3Name = dto.String3Name,
+            Text1Name = dto.Text1Name, Text2Name = dto.Text2Name, Text3Name = dto.Text3Name,
+            Number1Name = dto.Number1Name, Number2Name = dto.Number2Name, Number3Name = dto.Number3Name,
+            Bool1Name = dto.Bool1Name, Bool2Name = dto.Bool2Name, Bool3Name = dto.Bool3Name,
             ImageUrl = dto.ImageUrl
         };
-// 🟢 Process the Tags
+
         var tagEntities = new List<Tag>();
         foreach (var tagName in dto.Tags)
         {
             var cleanName = tagName.Trim().ToLower();
-            // Check if the tag already exists in the database
             var existingTag = await _context.Tags.FirstOrDefaultAsync(t => t.Name == cleanName);
             
-            if (existingTag != null)
-            {
-                tagEntities.Add(existingTag); // Use existing
-            }
-            else
-            {
-                tagEntities.Add(new Tag { Name = cleanName }); // Create new
-            }
+            if (existingTag != null) tagEntities.Add(existingTag); 
+            else tagEntities.Add(new Tag { Name = cleanName }); 
         }
         inventory.Tags = tagEntities;
         _context.Inventories.Add(inventory);
@@ -161,31 +141,83 @@ public class InventoriesController : ControllerBase
         return CreatedAtAction(nameof(GetInventories), new { id = inventory.Id }, inventory);
     }
 
-   [HttpPut("{id}")]
+    [HttpPut("{id}")]
     public async Task<IActionResult> UpdateInventory(int id, UpdateInvetoryDto dto)
     {
         var inventory = await _context.Inventories.FindAsync(id);
         if (inventory == null) return NotFound("Inventory not found.");
 
-        // 🟢 PHASE 2: Admin God Mode & Owner Check
         var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
         int.TryParse(currentUserIdStr, out int currentUserId);
         var currentUser = await _context.Users.FindAsync(currentUserId);
 
         if (currentUser == null || currentUser.IsBlocked) return Forbid();
         
-        // Block if they are not the owner AND not an admin
-        if (inventory.UserId != currentUserId && currentUser.Role != "Admin")
-        {
-            return Forbid();
-        }
+        if (inventory.UserId != currentUserId && currentUser.Role != "Admin") return Forbid();
 
+        // 🟢 FIXED: Map all the fields so auto-save works perfectly
         inventory.Title = dto.Title;
         inventory.Description = dto.Description;
         inventory.Category = dto.Category;
         inventory.CustomIdTemplate = dto.CustomIdTemplate;
+        
+        // Settings & Custom Fields
+        inventory.IsPublic = dto.IsPublic;
+        inventory.String1Name = dto.String1Name;
+        inventory.String2Name = dto.String2Name;
+        inventory.String3Name = dto.String3Name;
+        inventory.Text1Name = dto.Text1Name;
+        inventory.Text2Name = dto.Text2Name;
+        inventory.Text3Name = dto.Text3Name;
+        inventory.Number1Name = dto.Number1Name;
+        inventory.Number2Name = dto.Number2Name;
+        inventory.Number3Name = dto.Number3Name;
+        inventory.Bool1Name = dto.Bool1Name;
+        inventory.Bool2Name = dto.Bool2Name;
+        inventory.Bool3Name = dto.Bool3Name;
 
         await _context.SaveChangesAsync();
         return Ok(inventory);
+    }
+    // 🟢 NEW: Grant Write Access
+    [HttpPost("{id}/access/{targetUserId}")]
+    public async Task<IActionResult> GrantAccess(int id, int targetUserId)
+    {
+        var inventory = await _context.Inventories.FindAsync(id);
+        if (inventory == null) return NotFound();
+
+        var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        int.TryParse(currentUserIdStr, out int currentUserId);
+        var currentUser = await _context.Users.FindAsync(currentUserId);
+
+        if (inventory.UserId != currentUserId && currentUser?.Role != "Admin") return Forbid();
+
+        var exists = await _context.InventoryAccesses.AnyAsync(a => a.InventoryId == id && a.UserId == targetUserId);
+        if (!exists)
+        {
+            _context.InventoryAccesses.Add(new InventoryAccess { InventoryId = id, UserId = targetUserId });
+            await _context.SaveChangesAsync();
+        }
+        return Ok();
+    }
+
+    // 🟢 NEW: Revoke Write Access
+    [HttpDelete("{id}/access/{targetUserId}")]
+    public async Task<IActionResult> RevokeAccess(int id, int targetUserId)
+    {
+        var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        int.TryParse(currentUserIdStr, out int currentUserId);
+        var currentUser = await _context.Users.FindAsync(currentUserId);
+
+        var inventory = await _context.Inventories.FindAsync(id);
+        if (inventory != null && inventory.UserId != currentUserId && currentUser?.Role != "Admin") return Forbid();
+
+        var access = await _context.InventoryAccesses.FirstOrDefaultAsync(a => a.InventoryId == id && a.UserId == targetUserId);
+        if (access != null)
+        {
+            _context.InventoryAccesses.Remove(access);
+            await _context.SaveChangesAsync();
+        }
+        return Ok();
     }
 }

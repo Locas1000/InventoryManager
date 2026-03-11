@@ -7,11 +7,13 @@ import TagCloud from "../components/TagCloud";
 
 interface Inventory {
     id: number;
+    userId: number;
     title: string;
     description: string;
     category: string;
-    customIdTemplate: string;
-    userId: number;
+    customIdTemplate?: string; 
+    imageUrl?: string;
+    tags?: string[];
 }
 
 export default function Dashboard() {
@@ -53,10 +55,6 @@ export default function Dashboard() {
     useEffect(() => { fetchInventories(); }, [fetchInventories]);
 
     // 🟢 Toolbar Handlers
-    const handleView = (idList: number[]) => {
-        if (idList.length === 1) navigate(`/inventory/${idList[0]}`);
-    };
-
     const handleEdit = (idList: number[]) => {
         if (idList.length === 1) {
             const inv = inventories.find(i => i.id === idList[0]);
@@ -99,7 +97,6 @@ export default function Dashboard() {
             
             {/* Toolbar for My Inventories */}
             <div className="mb-2 p-2 bg-light border rounded d-flex gap-2">
-                <button className="btn btn-sm btn-outline-primary" disabled={selectedMyIds.length !== 1} onClick={() => handleView(selectedMyIds)}>View Items</button>
                 <button className="btn btn-sm btn-outline-warning" disabled={selectedMyIds.length !== 1} onClick={() => handleEdit(selectedMyIds)}>Edit Settings</button>
                 <button className="btn btn-sm btn-outline-danger" disabled={selectedMyIds.length === 0} onClick={() => handleDelete(selectedMyIds)}>Delete</button>
             </div>
@@ -125,7 +122,16 @@ export default function Dashboard() {
                                         <input type="checkbox" checked={selectedMyIds.includes(inv.id)} onChange={() => toggleSelection(inv.id, selectedMyIds, setSelectedMyIds)} />
                                     </td>
                                     <td>{inv.id}</td>
-                                    <td className="fw-bold">{inv.title}</td>
+                                    <td className="fw-bold">
+                                        {/* 🟢 Make Title Clickable */}
+                                        <span 
+                                            className="text-primary text-decoration-underline" 
+                                            style={{ cursor: "pointer" }} 
+                                            onClick={() => navigate(`/inventory/${inv.id}`)}
+                                        >
+                                            {inv.title}
+                                        </span>
+                                    </td>
                                     <td><span className="badge bg-secondary">{inv.category}</span></td>
                                     <td>{inv.description}</td>
                                 </tr>
@@ -143,7 +149,6 @@ export default function Dashboard() {
 
             {/* Toolbar for All Inventories */}
             <div className="mb-2 p-2 bg-light border rounded d-flex gap-2">
-                <button className="btn btn-sm btn-outline-primary" disabled={selectedAllIds.length !== 1} onClick={() => handleView(selectedAllIds)}>View Items</button>
                 {/* Only Admins should see Edit/Delete on global items they don't own */}
                 {currentUser?.role === 'Admin' && (
                     <>
@@ -174,7 +179,16 @@ export default function Dashboard() {
                                         <input type="checkbox" checked={selectedAllIds.includes(inv.id)} onChange={() => toggleSelection(inv.id, selectedAllIds, setSelectedAllIds)} />
                                     </td>
                                     <td>{inv.id}</td>
-                                    <td className="fw-bold">{inv.title}</td>
+                                    <td className="fw-bold">
+                                        {/* 🟢 Make Title Clickable */}
+                                        <span 
+                                            className="text-primary text-decoration-underline" 
+                                            style={{ cursor: "pointer" }} 
+                                            onClick={() => navigate(`/inventory/${inv.id}`)}
+                                        >
+                                            {inv.title}
+                                        </span>
+                                    </td>
                                     <td><span className="badge bg-secondary">{inv.category}</span></td>
                                     <td>{inv.description}</td>
                                 </tr>
