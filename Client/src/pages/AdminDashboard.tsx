@@ -14,6 +14,7 @@ interface User {
     email: string;
     role: string;
     inventoryCount: number;
+    isBlocked: boolean;
 }
 
 interface AdminData {
@@ -25,9 +26,9 @@ export default function AdminDashboard() {
     const [data, setData] = useState<AdminData | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
     const navigate = useNavigate();
 
-    // Extract current user to check if they are modifying themselves
     const userString = localStorage.getItem('user');
     const currentUser = userString ? JSON.parse(userString) : null;
     const currentUserId = Number(currentUser?.id || currentUser?.Id || currentUser?.userId || currentUser?.UserId);
@@ -42,6 +43,7 @@ export default function AdminDashboard() {
             .then((data) => {
                 setData(data);
                 setIsLoading(false);
+                setSelectedUsers([]); // Clear selection on reload
             })
             .catch((err) => {
                 setError(err.message);
@@ -53,17 +55,27 @@ export default function AdminDashboard() {
         loadData();
     }, [loadData]);
 
-    const handleToggleRole = async (targetId: number, currentRole: string) => {
-        const newRole = currentRole === "Admin" ? "User" : "Admin";
+    const handleCheckboxChange = (id: number) => {
+        setSelectedUsers(prev => 
+            prev.includes(id) ? prev.filter(userId => userId !== id) : [...prev, id]
+        );
+    };
 
-        // 🟢 CRITICAL FEATURE: The Admin Self-Demotion Check
+    const handleBulkRoleToggle = async () => {
+        if (selectedUsers.length !== 1) {
+            alert("Please select exactly one user to toggle their role.");
+            return;
+        }
+        const targetId = selectedUsers[0];
+        const targetUser = data?.users.find(u => u.id === targetId);
+        if (!targetUser) return;
+
+        const newRole = targetUser.role === "Admin" ? "User" : "Admin";
+
         if (targetId === currentUserId && newRole === "User") {
-            const confirmDemotion = window.confirm(
-                "WARNING: You are about to revoke your own Admin privileges. You will lose access to this dashboard immediately. Are you absolutely sure?"
-            );
-            if (!confirmDemotion) return;
+            if (!window.confirm("WARNING: You are about to revoke your own Admin privileges. Are you sure?")) return;
         } else if (newRole === "Admin") {
-            if (!window.confirm("Are you sure you want to promote this user to Admin?")) return;
+            if (!window.confirm("Promote this user to Admin?")) return;
         }
 
         try {
@@ -74,14 +86,13 @@ export default function AdminDashboard() {
             });
 
             if (res.ok) {
-                // If they successfully demoted themselves, kick them out!
                 if (targetId === currentUserId && newRole === "User") {
                     const updatedUser = { ...currentUser, role: "User", Role: "User" };
                     localStorage.setItem('user', JSON.stringify(updatedUser));
                     navigate("/");
-                    window.location.reload(); // Force the navbar to update and hide the Admin link
+                    window.location.reload(); 
                 } else {
-                    loadData(); // Just refresh the table
+                    loadData(); 
                 }
             } else {
                 alert("Failed to update role.");
@@ -91,126 +102,95 @@ export default function AdminDashboard() {
         }
     };
 
-    const handleDeleteUser = async (targetId: number) => {
-        if (targetId === currentUserId) {
+    const handleBulkToggleBlock = async () => {
+        if (selectedUsers.includes(currentUserId)) {
+            alert("You cannot block yourself. Please unselect your account.");
+            return;
+        }
+
+        try {
+            // Processing sequentially to match the single-endpoint API
+            for (const targetId of selectedUsers) {
+                await fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/admin/users/${targetId}/toggle-block`, { method: "PUT" });
+            }
+            loadData();
+        } catch (err) {
+            console.error(err);
+            alert("An error occurred while toggling block status.");
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedUsers.includes(currentUserId)) {
             alert("You cannot delete your own account from the dashboard.");
             return;
         }
 
-        if (!window.confirm("Are you sure you want to permanently delete this user? This action cannot be undone.")) return;
+        if (!window.confirm(`Are you sure you want to delete ${selectedUsers.length} user(s)?`)) return;
 
         try {
-            const res = await fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/admin/users/${targetId}`, { method: "DELETE" });
-            if (res.ok) {
-                loadData();
-            } else {
-                alert("Failed to delete user.");
+            for (const targetId of selectedUsers) {
+                await fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/admin/users/${targetId}`, { method: "DELETE" });
             }
+            loadData();
         } catch (err) {
             console.error(err);
+            alert("An error occurred while deleting users.");
         }
     };
 
     if (isLoading) return <div className="container mt-5 text-center"><div className="spinner-border text-primary" role="status"></div></div>;
-
-    if (error) {
-        return (
-            <div className="container mt-5">
-                <div className="alert alert-danger shadow-sm border-0 text-center p-5">
-                    <i className="bi bi-shield-lock-fill text-danger" style={{ fontSize: "3rem" }}></i>
-                    <h2 className="mt-3 fw-bold">Restricted Area</h2>
-                    <p className="lead">{error}</p>
-                    <Link to="/" className="btn btn-outline-danger mt-3">Return to Dashboard</Link>
-                </div>
-            </div>
-        );
-    }
+    if (error) return <div className="container mt-5"><div className="alert alert-danger text-center"><p className="lead">{error}</p><Link to="/" className="btn btn-outline-danger mt-3">Return to Dashboard</Link></div></div>;
 
     return (
         <div className="container mt-5">
-            <h2 className="fw-bold mb-4">
-                <i className="bi bi-speedometer2 text-primary me-2"></i> 
-                Admin Control Panel
-            </h2>
-
-            <div className="row g-4 mb-5">
-                <div className="col-md-4">
-                    <div className="card text-center shadow-sm border-0 bg-primary text-white h-100 py-3">
-                        <div className="card-body">
-                            <h1 className="display-4 fw-bold">{data?.stats.totalUsers}</h1>
-                            <h5 className="card-title">Registered Users</h5>
-                        </div>
-                    </div>
-                </div>
-                <div className="col-md-4">
-                    <div className="card text-center shadow-sm border-0 bg-success text-white h-100 py-3">
-                        <div className="card-body">
-                            <h1 className="display-4 fw-bold">{data?.stats.totalInventories}</h1>
-                            <h5 className="card-title">Total Inventories</h5>
-                        </div>
-                    </div>
-                </div>
-                <div className="col-md-4">
-                    <div className="card text-center shadow-sm border-0 bg-info text-dark h-100 py-3">
-                        <div className="card-body">
-                            <h1 className="display-4 fw-bold">{data?.stats.totalItems}</h1>
-                            <h5 className="card-title">Items Tracked</h5>
-                        </div>
-                    </div>
-                </div>
+            <h2 className="fw-bold mb-4">Admin Control Panel</h2>
+            
+            {/* 🟢 THE TOOLBAR (Replaces inline buttons) */}
+            <div className="mb-3 d-flex gap-2 p-2 bg-light border rounded">
+                <button className="btn btn-primary" disabled={selectedUsers.length !== 1} onClick={handleBulkRoleToggle}>
+                    Toggle Role (Single)
+                </button>
+                <button className="btn btn-warning" disabled={selectedUsers.length === 0} onClick={handleBulkToggleBlock}>
+                    Toggle Block
+                </button>
+                <button className="btn btn-danger" disabled={selectedUsers.length === 0} onClick={handleBulkDelete}>
+                    Delete Selected
+                </button>
+                <span className="ms-auto align-self-center text-muted">
+                    {selectedUsers.length} selected
+                </span>
             </div>
 
             <div className="card shadow-sm border-0 mb-5">
-                <div className="card-header bg-white border-bottom-0 pt-4 pb-2">
-                    <h4 className="fw-bold mb-0">System Users</h4>
-                </div>
                 <div className="card-body p-0">
                     <div className="table-responsive">
-                        <table className="table table-hover align-middle mb-0">
-                            <thead className="table-light">
+                        <table className="table table-bordered table-striped mb-0">
+                            <thead className="table-dark">
                                 <tr>
-                                    <th className="px-4">ID</th>
+                                    <th style={{width: '50px'}} className="text-center">☑</th>
+                                    <th>ID</th>
                                     <th>Username</th>
                                     <th>Email</th>
                                     <th>Role</th>
-                                    <th className="text-center">Inventories Owned</th>
-                                    <th className="px-4 text-end">Actions</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {data?.users.map((user) => (
                                     <tr key={user.id}>
-                                        <td className="px-4 text-muted">#{user.id}</td>
-                                        <td className="fw-semibold">
-                                            @{user.username}
-                                            {user.id === currentUserId && <span className="badge bg-primary ms-2">You</span>}
+                                        <td className="text-center">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={selectedUsers.includes(user.id)}
+                                                onChange={() => handleCheckboxChange(user.id)}
+                                            />
                                         </td>
+                                        <td>{user.id}</td>
+                                        <td>@{user.username} {user.id === currentUserId && <span className="badge bg-primary ms-2">You</span>}</td>
                                         <td>{user.email}</td>
-                                        <td>
-                                            <span className={`badge ${user.role === 'Admin' ? 'bg-danger' : 'bg-secondary'}`}>
-                                                {user.role}
-                                            </span>
-                                        </td>
-                                        <td className="text-center">{user.inventoryCount}</td>
-                                        <td className="px-4 text-end">
-                                            {/* 🟢 The New Actions Menu */}
-                                            <button 
-                                                className={`btn btn-sm me-2 ${user.role === 'Admin' ? 'btn-outline-warning' : 'btn-outline-success'}`}
-                                                onClick={() => handleToggleRole(user.id, user.role)}
-                                                title={user.role === 'Admin' ? "Demote to User" : "Promote to Admin"}
-                                            >
-                                                <i className={`bi ${user.role === 'Admin' ? 'bi-arrow-down-circle' : 'bi-arrow-up-circle'}`}></i>
-                                            </button>
-                                            
-                                            <button 
-                                                className="btn btn-sm btn-outline-danger"
-                                                onClick={() => handleDeleteUser(user.id)}
-                                                disabled={user.id === currentUserId} // Prevent deleting yourself
-                                                title="Delete User"
-                                            >
-                                                <i className="bi bi-trash"></i>
-                                            </button>
-                                        </td>
+                                        <td>{user.role}</td>
+                                        <td>{user.isBlocked ? <span className="text-danger fw-bold">Blocked</span> : <span className="text-success">Active</span>}</td>
                                     </tr>
                                 ))}
                             </tbody>

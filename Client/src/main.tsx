@@ -3,16 +3,16 @@ import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { BrowserRouter } from 'react-router-dom'; // 🟢 Import BrowserRouter
+import { BrowserRouter } from 'react-router-dom';
 
-// Grab the Client ID from your .env file
+// 🟢 PHASE 5: Import the i18n configuration
+import './i18n'; 
+
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    {/* Google Provider goes on the outside */}
     <GoogleOAuthProvider clientId={googleClientId}>
-      {/* 🟢 BrowserRouter wraps the App */}
       <BrowserRouter>
         <App />
       </BrowserRouter>

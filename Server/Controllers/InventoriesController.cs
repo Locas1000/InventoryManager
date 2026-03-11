@@ -50,18 +50,16 @@ public class InventoriesController : ControllerBase
     }
 
 
-    [HttpGet("{id}")]
-    [AllowAnonymous] // Ensures non-authenticated users can still view the inventory in read-only mode
+   [HttpGet("{id}")]
+    [AllowAnonymous] 
     public async Task<IActionResult> GetInventory(int id)
     {
-        // 1. Safely extract the current user ID. If they aren't logged in, it defaults to 0.
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         int.TryParse(userIdClaim, out int currentUserId);
 
-        // 2. Fetch the inventory and project exactly the fields the React frontend expects
         var inventory = await _context.Inventories
             .Include(i => i.Items)
-            .ThenInclude(item => item.Likes) // 🟢 CRITICAL: Pull in the join table
+            .ThenInclude(item => item.Likes) 
             .Where(i => i.Id == id)
             .Select(i => new 
             {
@@ -70,6 +68,7 @@ public class InventoriesController : ControllerBase
                 i.Title,
                 i.Description,
                 i.Category,
+                i.IsPublic, // 🟢 PHASE 2: Expose public status to React
                 Tags = i.Tags.Select(t => t.Name),
                 i.CustomIdTemplate,
                 i.ImageUrl,
@@ -80,31 +79,24 @@ public class InventoriesController : ControllerBase
                 i.Text1Name, i.Text2Name, i.Text3Name,
                 i.Bool1Name, i.Bool2Name, i.Bool3Name,
                 
-                // Map the items
                 Items = i.Items.Select(item => new 
                 {
                     item.Id,
                     item.CustomId,
                     item.Name,
                     item.ImageUrl,
-                    // Custom Field Values
                     item.String1Value, item.String2Value, item.String3Value,
                     item.Number1Value, item.Number2Value, item.Number3Value,
                     item.Text1Value, item.Text2Value, item.Text3Value,
                     item.Bool1Value, item.Bool2Value, item.Bool3Value,
                     
-                    // 🟢 NEW: Calculate the like data on the fly
                     TotalLikes = item.Likes.Count,
                     CurrentUserLiked = currentUserId != 0 && item.Likes.Any(l => l.UserId == currentUserId)
                 }).ToList()
             })
             .FirstOrDefaultAsync();
 
-        if (inventory == null)
-        {
-            return NotFound(new { message = "Inventory not found." });
-        }
-
+        if (inventory == null) return NotFound(new { message = "Inventory not found." });
         return Ok(inventory);
     }
 
@@ -169,11 +161,24 @@ public class InventoriesController : ControllerBase
         return CreatedAtAction(nameof(GetInventories), new { id = inventory.Id }, inventory);
     }
 
-    [HttpPut("{id}")]
+   [HttpPut("{id}")]
     public async Task<IActionResult> UpdateInventory(int id, UpdateInvetoryDto dto)
     {
         var inventory = await _context.Inventories.FindAsync(id);
         if (inventory == null) return NotFound("Inventory not found.");
+
+        // 🟢 PHASE 2: Admin God Mode & Owner Check
+        var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        int.TryParse(currentUserIdStr, out int currentUserId);
+        var currentUser = await _context.Users.FindAsync(currentUserId);
+
+        if (currentUser == null || currentUser.IsBlocked) return Forbid();
+        
+        // Block if they are not the owner AND not an admin
+        if (inventory.UserId != currentUserId && currentUser.Role != "Admin")
+        {
+            return Forbid();
+        }
 
         inventory.Title = dto.Title;
         inventory.Description = dto.Description;

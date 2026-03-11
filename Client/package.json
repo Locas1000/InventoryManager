@@ -10,13 +10,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@hello-pangea/dnd": "^18.0.1",
     "@react-oauth/google": "^0.13.4",
     "bootstrap": "^5.3.8",
+    "i18next": "^25.8.17",
     "react": "^19.2.0",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.2.0",
     "react-github-login": "^1.0.3",
+    "react-i18next": "^16.5.6",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.13.0"
   },

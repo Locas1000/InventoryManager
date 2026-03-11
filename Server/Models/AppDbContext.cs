@@ -14,6 +14,8 @@ public class AppDbContext : DbContext
     public DbSet<Comment> Comments { get; set; }
     public DbSet<Tag> Tags { get; set; }
     public DbSet<ItemLike> ItemLikes { get; set; }
+    public DbSet<Category> Categories { get; set; }
+    public DbSet<InventoryAccess> InventoryAccesses { get; set; }
     // This method is used to configure special database rules that can't be set with basic properties.
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -42,6 +44,26 @@ public class AppDbContext : DbContext
             .Property(i => i.Version)
             .IsRowVersion();
         
+        modelBuilder.Entity<InventoryAccess>()
+            .HasKey(ia => new { ia.InventoryId, ia.UserId });
+
+        modelBuilder.Entity<InventoryAccess>()
+            .HasOne(ia => ia.Inventory)
+            .WithMany(i => i.AllowedUsers)
+            .HasForeignKey(ia => ia.InventoryId);
+
+        modelBuilder.Entity<InventoryAccess>()
+            .HasOne(ia => ia.User)
+            .WithMany(u => u.WriteAccesses)
+            .HasForeignKey(ia => ia.UserId);
+
+        // Phase 1: Seed Category Data
+        modelBuilder.Entity<Category>().HasData(
+            new Category { Id = 1, Name = "Equipment" },
+            new Category { Id = 2, Name = "Furniture" },
+            new Category { Id = 3, Name = "Book" },
+            new Category { Id = 4, Name = "Other" }
+        );
     }
 }
 

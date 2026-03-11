@@ -10,7 +10,10 @@ public class Inventory
     public string Category { get; set; } = string.Empty;
     public string? ImageUrl { get; set; } 
     public string CustomIdTemplate { get; set; } = string.Empty;
-
+    public bool IsPublic { get; set; } = false;
+    [Timestamp]
+    public byte[]? RowVersion { get; set; }
+    public ICollection<InventoryAccess> AllowedUsers { get; set; } = new List<InventoryAccess>();
     public List<Tag> Tags { get; set; } = new();
     public int UserId { get; set; }
     public User User { get; set; } = null!;

@@ -21,54 +21,41 @@ public class ItemsController : ControllerBase
         _context = context;
         _idGenerator = idGenerator;
     }
-    [HttpPut("{id}")]
+   [HttpPut("{id}")]
     [Authorize]
     public async Task<IActionResult> UpdateItem(int id, [FromBody] UpdateItemDto dto)
     {
-        
-        // 1. Find the existing item
         var item = await _context.Items.FindAsync(id);
-        if (item == null)
-        {
-            return NotFound(new { message = "Item not found." });
-        }
-// 1. Get the inventory this item belongs to
+        if (item == null) return NotFound(new { message = "Item not found." });
+
         var inventory = await _context.Inventories.FindAsync(item.InventoryId);
-    
-        // 2. Get the current user making the request
-        var currentUserIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        // 🟢 PHASE 2: Master Write-Access Check
+        var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
         int.TryParse(currentUserIdStr, out int currentUserId);
+        var currentUser = await _context.Users.FindAsync(currentUserId);
 
-        // 3. Block them if they don't own the inventory
-        if (inventory == null || inventory.UserId != currentUserId)
+        if (currentUser == null || currentUser.IsBlocked) return Forbid();
+
+        bool isOwner = inventory!.UserId == currentUserId;
+        bool isAdmin = currentUser.Role == "Admin";
+        bool isPublic = inventory.IsPublic;
+        bool hasExplicitAccess = await _context.InventoryAccesses
+            .AnyAsync(ia => ia.InventoryId == inventory.Id && ia.UserId == currentUserId);
+
+        if (!isOwner && !isAdmin && !isPublic && !hasExplicitAccess)
         {
-            return Forbid(); // Returns a 403 Forbidden status code
+            return Forbid(); 
         }
-        // Optional: Check if user has write access here later based on your auth rules
 
-        // 2. Update the standard fields
         item.Name = dto.Name;
-        item.CustomId = dto.CustomId; // Custom IDs are editable 
-
+        item.CustomId = dto.CustomId; 
         item.ImageUrl = dto.ImageUrl;
-        // 3. Update the 12 dynamic custom fields
-        item.String1Value = dto.String1Value;
-        item.String2Value = dto.String2Value;
-        item.String3Value = dto.String3Value;
-    
-        item.Text1Value = dto.Text1Value;
-        item.Text2Value = dto.Text2Value;
-        item.Text3Value = dto.Text3Value;
-    
-        item.Number1Value = dto.Number1Value;
-        item.Number2Value = dto.Number2Value;
-        item.Number3Value = dto.Number3Value;
-    
-        item.Bool1Value = dto.Bool1Value;
-        item.Bool2Value = dto.Bool2Value;
-        item.Bool3Value = dto.Bool3Value;
+        item.String1Value = dto.String1Value; item.String2Value = dto.String2Value; item.String3Value = dto.String3Value;
+        item.Text1Value = dto.Text1Value; item.Text2Value = dto.Text2Value; item.Text3Value = dto.Text3Value;
+        item.Number1Value = dto.Number1Value; item.Number2Value = dto.Number2Value; item.Number3Value = dto.Number3Value;
+        item.Bool1Value = dto.Bool1Value; item.Bool2Value = dto.Bool2Value; item.Bool3Value = dto.Bool3Value;
 
-        // 4. Save and catch duplicates
         try
         {
             await _context.SaveChangesAsync();
@@ -76,11 +63,10 @@ public class ItemsController : ControllerBase
         }
         catch (DbUpdateException)
         {
-            // If they enter a duplicate CustomID, the database will reject the item 
-            // We catch that crash here and return a friendly error to the React frontend
             return BadRequest(new { message = "An item with this Custom ID already exists in this inventory." });
         }
     }
+    
     
     [HttpPost("{itemId}/toggle-like")]
     [Authorize] // Ensure only logged-in users can like items
@@ -140,39 +126,45 @@ public class ItemsController : ControllerBase
         if (item == null) return NotFound("Item not found.");
         return Ok(item);
     }
-    [HttpPost]
+    
+   [HttpPost]
+    [Authorize] // 🟢 Phase 2: Must be logged in to create items
     public async Task<ActionResult<Item>> CreateItem(CreateItemDto dto)
     {
         var inventory = await _context.Inventories.FindAsync(dto.InventoryId);
         if (inventory == null) return NotFound("Inventory not found.");
 
+        // 🟢 PHASE 2: Master Write-Access Check
+        var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        int.TryParse(currentUserIdStr, out int currentUserId);
+        var currentUser = await _context.Users.FindAsync(currentUserId);
+
+        if (currentUser == null || currentUser.IsBlocked) return Forbid();
+
+        bool isOwner = inventory.UserId == currentUserId;
+        bool isAdmin = currentUser.Role == "Admin";
+        bool isPublic = inventory.IsPublic;
+        bool hasExplicitAccess = await _context.InventoryAccesses
+            .AnyAsync(ia => ia.InventoryId == inventory.Id && ia.UserId == currentUserId);
+
+        if (!isOwner && !isAdmin && !isPublic && !hasExplicitAccess)
+        {
+            return Forbid(); 
+        }
+
         var generatedId = await _idGenerator.GenerateIdAsync(dto.InventoryId, inventory.CustomIdTemplate);
 
-        Console.WriteLine($"---> ATTEMPTING TO SAVE ITEM WITH ID: {generatedId}");
-
-// Example for CreateItem:
         var newItem = new Item
         {
             Name = dto.Name,
             InventoryId = dto.InventoryId,
             CustomId = generatedId,
             ImageUrl = dto.ImageUrl,
-    
-            // 🟢 Map the Custom Field Values
-            String1Value = dto.String1Value,
-            String2Value = dto.String2Value,
-            String3Value = dto.String3Value,
-            Text1Value = dto.Text1Value,
-            Text2Value = dto.Text2Value,
-            Text3Value = dto.Text3Value,
-            Number1Value = dto.Number1Value,
-            Number2Value = dto.Number2Value,
-            Number3Value = dto.Number3Value,
-            Bool1Value = dto.Bool1Value,
-            Bool2Value = dto.Bool2Value,
-            Bool3Value = dto.Bool3Value
+            String1Value = dto.String1Value, String2Value = dto.String2Value, String3Value = dto.String3Value,
+            Text1Value = dto.Text1Value, Text2Value = dto.Text2Value, Text3Value = dto.Text3Value,
+            Number1Value = dto.Number1Value, Number2Value = dto.Number2Value, Number3Value = dto.Number3Value,
+            Bool1Value = dto.Bool1Value, Bool2Value = dto.Bool2Value, Bool3Value = dto.Bool3Value
         };
-
 
         _context.Items.Add(newItem);
 
@@ -183,50 +175,46 @@ public class ItemsController : ControllerBase
         }
         catch (DbUpdateException ex)
         {
-            // 🟢 The ULTIMATE Postgres duplicate key catcher
             var innerEx = ex.InnerException as Npgsql.PostgresException;
             if (innerEx != null && innerEx.SqlState == "23505")
             {
                 return BadRequest(new { message = $"Duplicate ID detected! The generator tried to save '{generatedId}' but it already exists. Please check your Inventory ID Template." });
             }
-
-            // If it's something else, throw it
             throw;
         }
     }
 
-
-// DELETE: api/Items/5
-    [HttpDelete("{id}")]
+[HttpDelete("{id}")]
+    [Authorize] // 🟢 Phase 2: Added Authorize
     public async Task<IActionResult> DeleteItem(int id)
     {
-        // 1. Find the item
         var item = await _context.Items.FindAsync(id);
-        
-        // 2. If it doesn't exist, return Not Found
-        if (item == null)
-        {
-            return NotFound();
-        }
-// 1. Get the inventory this item belongs to
+        if (item == null) return NotFound();
+
         var inventory = await _context.Inventories.FindAsync(item.InventoryId);
     
-        // 2. Get the current user making the request
-        var currentUserIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        // 🟢 PHASE 2: Master Write-Access Check
+        var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
         int.TryParse(currentUserIdStr, out int currentUserId);
+        var currentUser = await _context.Users.FindAsync(currentUserId);
 
-        // 3. Block them if they don't own the inventory
-        if (inventory == null || inventory.UserId != currentUserId)
+        if (currentUser == null || currentUser.IsBlocked) return Forbid();
+
+        bool isOwner = inventory!.UserId == currentUserId;
+        bool isAdmin = currentUser.Role == "Admin";
+        bool isPublic = inventory.IsPublic;
+        bool hasExplicitAccess = await _context.InventoryAccesses
+            .AnyAsync(ia => ia.InventoryId == inventory.Id && ia.UserId == currentUserId);
+
+        if (!isOwner && !isAdmin && !isPublic && !hasExplicitAccess)
         {
-            return Forbid(); // Returns a 403 Forbidden status code
+            return Forbid(); 
         }
-        // 3. Remove from the database
+
         _context.Items.Remove(item);
-        
-        // 4. Save changes
-        // Note: later we will implement Optimistic Locking here using a version field
         await _context.SaveChangesAsync();
 
-        return NoContent(); // Standard 204 response for successful deletion
+        return NoContent(); 
     }
+
 }

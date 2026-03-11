@@ -24,8 +24,13 @@ public class User
     
     public string? ProviderKey { get; set; }
     
+    
     public ICollection<ItemLike> LikedItems { get; set; } = new List<ItemLike>();
     
     // Navigation property
     public List<Inventory> Inventories { get; set; } = new();
+    
+    public bool IsBlocked { get; set; } = false;
+    
+    public ICollection<InventoryAccess> WriteAccesses { get; set; } = new List<InventoryAccess>();
 }
