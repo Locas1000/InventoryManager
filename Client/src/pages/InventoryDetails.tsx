@@ -74,7 +74,7 @@ export default function InventoryDetails() {
     const hasWriteAccess = isOwnerOrAdmin || inventory?.isPublic || inventory?.allowedUsers?.some((u: any) => u.id === currentUserId);
     
     const fetchInventory = useCallback(() => {
-        fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/inventories/${id}`)
+        fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/inventories/${id}?t=${new Date().getTime()}`)
             .then(res => {
                 if (!res.ok) throw new Error("Inventory not found");
                 return res.json();

@@ -49,7 +49,7 @@ public class InventoriesController : ControllerBase
         return Ok(inventories);
     }
 
-    [HttpGet("{id}")]
+   [HttpGet("{id}")]
     [AllowAnonymous] 
     public async Task<IActionResult> GetInventory(int id)
     {
@@ -59,9 +59,8 @@ public class InventoriesController : ControllerBase
         var inventory = await _context.Inventories
             .Include(i => i.Items)
             .ThenInclude(item => item.Likes) 
-            // 🟢 ADD THESE TWO LINES SO THE DATABASE FETCHES THE USERS:
-            .Include(i => i.AllowedUsers)
-            .ThenInclude(a => a.User)
+            .Include(i => i.AllowedUsers) // Fetches the join table
+            .ThenInclude(a => a.User)     // Fetches the actual users
             .Where(i => i.Id == id)
             .Select(i => new 
             {
@@ -74,6 +73,9 @@ public class InventoriesController : ControllerBase
                 Tags = i.Tags.Select(t => t.Name),
                 i.CustomIdTemplate,
                 i.ImageUrl,
+                
+                // 🟢 THIS IS THE CRITICAL LINE: It maps the fetched users into the JSON
+                AllowedUsers = i.AllowedUsers.Select(a => new { a.User.Id, a.User.Username, a.User.Email }),
                 
                 i.String1Name, i.String2Name, i.String3Name,
                 i.Number1Name, i.Number2Name, i.Number3Name,
