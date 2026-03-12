@@ -36,6 +36,8 @@ public class InventoriesController : ControllerBase
             {
                 i.Id,
                 i.UserId, // 🟢 FIXED: The dashboard now receives the UserId!
+                CreatorName = i.User.Username,
+                ItemCount = i.Items.Count,
                 i.Title,
                 i.Description,
                 i.Category,

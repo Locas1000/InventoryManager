@@ -1,10 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import type { DragEndEvent } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import type { DropResult } from '@hello-pangea/dnd';
 
 import AddItemModal from "../components/AddItemModal";
 import { fetchWithAuth } from "../utils/api";
@@ -12,65 +9,37 @@ import EditItemModal from "../components/EditItemModal";
 import ViewItemModal from "../components/ViewItemModal";
 import DiscussionBoard from "../components/DiscussionBoard";
 
-// --- DND HELPER COMPONENT ---
-function SortableField({ id, label, value, onChange }: { id: string, label: string, value: string, onChange: (id: string, val: string) => void }) {
-    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
-    const style = { transform: CSS.Transform.toString(transform), transition };
-    
-    return (
-        <div ref={setNodeRef} style={style} className="d-flex align-items-center mb-2 bg-light p-2 border rounded">
-            <span {...attributes} {...listeners} className="me-3 text-muted" style={{cursor: 'grab'}}>
-                <i className="bi bi-grip-vertical"></i>
-            </span>
-            <span className="me-3 fw-bold" style={{width: '100px'}}>{label}</span>
-            <input 
-                type="text" 
-                className="form-control" 
-                placeholder="Field Display Name (leave blank to hide)" 
-                value={value || ''} 
-                onChange={e => onChange(id, e.target.value)} 
-            />
-        </div>
-    );
-}
-
-// --- MAIN COMPONENT ---
 export default function InventoryDetails() {
     const { id } = useParams();
     const [inventory, setInventory] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
     
-    // 🟢 Tabs & Modals State
+    // Tabs & Modals State
     const [activeTab, setActiveTab] = useState('items');
     const [showAddItemModal, setShowAddItemModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
     
-    // 🟢 Items Selection State
+    // Items Selection State
     const [selectedItems, setSelectedItems] = useState<number[]>([]);
     const [itemToView, setItemToView] = useState<any>(null);
 
-    // 🟢 Auto-Save State
+    // Auto-Save State
     const [formData, setFormData] = useState<any>({});
     const [isDirty, setIsDirty] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
-    // 🟢 Access Management State
+    // Access Management State
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<any[]>([]);
 
-    // 🟢 Custom Fields DnD State
+    // Custom Fields DnD State
     const [customFields, setCustomFields] = useState<{id: string, label: string, value: string}[]>([]);
-
-    const sensors = useSensors(
-        useSensor(PointerSensor),
-        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-    );
 
     const userString = localStorage.getItem('user');
     const currentUser = userString ? JSON.parse(userString) : null;
-    const currentUserId = currentUser ? Number(currentUser.id) : null;
-    const isOwnerOrAdmin = inventory && (currentUserId === inventory.userId || currentUser?.role === 'Admin');
+    const currentUserId = currentUser ? Number(currentUser.id || currentUser.Id || currentUser.userId || currentUser.UserId) : null;
+    const isOwnerOrAdmin = inventory && (currentUserId === inventory.userId || currentUser?.role === 'Admin' || currentUser?.Role === 'Admin');
     const hasWriteAccess = isOwnerOrAdmin || inventory?.isPublic || inventory?.allowedUsers?.some((u: any) => u.id === currentUserId);
     
     const fetchInventory = useCallback(() => {
@@ -85,7 +54,7 @@ export default function InventoryDetails() {
                 setIsLoading(false);
                 setSelectedItems([]);
                 
-                // Initialize sortable fields
+                // Initialize fields
                 setCustomFields([
                     { id: 'string1Name', label: 'String 1', value: data.string1Name },
                     { id: 'string2Name', label: 'String 2', value: data.string2Name },
@@ -106,7 +75,7 @@ export default function InventoryDetails() {
 
     useEffect(() => { fetchInventory(); }, [fetchInventory]);
 
-    // 🟢 Auto-Save Effect (Fires every 8 seconds if dirty)
+    // Auto-Save Effect (Fires every 1 second if dirty)
     useEffect(() => {
         const timer = setInterval(() => {
             if (isDirty && formData && isOwnerOrAdmin) {
@@ -134,18 +103,17 @@ export default function InventoryDetails() {
         try {
             const res = await fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/inventories/${id}/access/${targetUserId}`, { method: 'POST' });
             if (res.ok) {
-                setSearchResults([]); // Clear search box
+                setSearchResults([]); 
                 setSearchQuery('');
-                fetchInventory(); // Refresh to show new user in the list
+                fetchInventory(); 
             }
         } catch (error) { console.error(error); }
     };
 
-    // 🟢 Handle Removing Access
     const handleRevokeAccess = async (targetUserId: number) => {
         try {
             const res = await fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/inventories/${id}/access/${targetUserId}`, { method: 'DELETE' });
-            if (res.ok) fetchInventory(); // Refresh to remove user from list
+            if (res.ok) fetchInventory(); 
         } catch (error) { console.error(error); }
     };
     
@@ -156,16 +124,16 @@ export default function InventoryDetails() {
         setIsDirty(true);
     };
 
-    const handleFieldDragEnd = (event: DragEndEvent) => {
-        const { active, over } = event;
-        if (over && active.id !== over.id) {
-            setCustomFields((items) => {
-                const oldIndex = items.findIndex(i => i.id === active.id);
-                const newIndex = items.findIndex(i => i.id === over.id);
-                return arrayMove(items, oldIndex, newIndex);
-            });
-            setIsDirty(true);
-        }
+    // 🟢 @hello-pangea/dnd drag handler
+    const handleDragEnd = (result: DropResult) => {
+        if (!result.destination) return; 
+
+        const items = Array.from(customFields);
+        const [reorderedItem] = items.splice(result.source.index, 1);
+        items.splice(result.destination.index, 0, reorderedItem);
+
+        setCustomFields(items);
+        setIsDirty(true);
     };
 
     const handleFieldChange = (fieldId: string, newValue: string) => {
@@ -256,7 +224,7 @@ export default function InventoryDetails() {
                 </div>
             </div>
 
-            {/* 🟢 ROLE-BASED TABS */}
+            {/* ROLE-BASED TABS */}
             <ul className="nav nav-tabs mb-4">
                 <li className="nav-item"><button className={`nav-link fw-bold ${activeTab === 'items' ? 'active' : ''}`} onClick={() => setActiveTab('items')}>Items</button></li>
                 <li className="nav-item"><button className={`nav-link fw-bold ${activeTab === 'discussion' ? 'active' : ''}`} onClick={() => setActiveTab('discussion')}>Discussion</button></li>
@@ -270,13 +238,10 @@ export default function InventoryDetails() {
                     </>
                 )}
             </ul>
-
-            {/* --- TAB CONTENT --- */}
             
             {/* TAB 1: ITEMS */}
             {activeTab === 'items' && (
                 <>
-                    {/* The Items Toolbar */}
                     {hasWriteAccess && (
                         <div className="mb-3 p-2 bg-light border rounded d-flex gap-2">
                             <button className="btn btn-primary" onClick={() => setShowAddItemModal(true)}>+ Add New Item</button>
@@ -372,20 +337,53 @@ export default function InventoryDetails() {
                             <h4 className="mb-4">Manage Custom Fields</h4>
                             <p className="text-muted">Drag and drop to reorder how fields are displayed in the table. Changes auto-save.</p>
                             
-                            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleFieldDragEnd}>
-                                <SortableContext items={customFields.map(f => f.id)} strategy={verticalListSortingStrategy}>
-                                    {customFields.map(field => (
-                                        <SortableField key={field.id} id={field.id} label={field.label} value={field.value} onChange={handleFieldChange} />
-                                    ))}
-                                </SortableContext>
-                            </DndContext>
+                            <DragDropContext onDragEnd={handleDragEnd}>
+                                <Droppable droppableId="custom-fields-list">
+                                    {(provided) => (
+                                        <div {...provided.droppableProps} ref={provided.innerRef}>
+                                            {customFields.map((field, index) => (
+                                                <Draggable key={field.id} draggableId={field.id} index={index}>
+                                                    {(provided) => (
+                                                        <div
+                                                            ref={provided.innerRef}
+                                                            {...provided.draggableProps}
+                                                            className="d-flex align-items-center mb-2 bg-light p-2 border rounded shadow-sm"
+                                                            style={{
+                                                                ...provided.draggableProps.style,
+                                                                backgroundColor: 'white' // Prevents transparent background while dragging
+                                                            }}
+                                                        >
+                                                            <span 
+                                                                {...provided.dragHandleProps} 
+                                                                className="me-3 text-muted px-2 py-1"
+                                                                style={{ cursor: 'grab' }}
+                                                            >
+                                                                <i className="bi bi-grip-vertical fs-5"></i>
+                                                            </span>
+                                                            <span className="me-3 fw-bold" style={{width: '100px'}}>{field.label}</span>
+                                                            <input 
+                                                                type="text" 
+                                                                className="form-control" 
+                                                                placeholder="Field Display Name (leave blank to hide)" 
+                                                                value={field.value || ''} 
+                                                                onChange={e => handleFieldChange(field.id, e.target.value)} 
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                        </div>
+                                    )}
+                                </Droppable>
+                            </DragDropContext>
+
                         </div>
                     </div>
                 </div>
             )}
 
             {/* TAB 5: ACCESS CONTROL (Owner/Admin Only) */}
-          {/* TAB 5: ACCESS CONTROL (Owner/Admin Only) */}
             {activeTab === 'access' && isOwnerOrAdmin && (
                 <div className="row">
                     <div className="col-md-6">
@@ -403,7 +401,6 @@ export default function InventoryDetails() {
                                 <h4 className="mb-3">Grant Write Access</h4>
                                 <input type="text" className="form-control mb-3" placeholder="Search users by name or email..." value={searchQuery} onChange={handleUserSearch} />
                                 
-                                {/* Search Results */}
                                 {searchResults.length > 0 && (
                                     <ul className="list-group mb-4">
                                         {searchResults.map(u => (
@@ -415,7 +412,6 @@ export default function InventoryDetails() {
                                     </ul>
                                 )}
 
-                                {/* Current Allowed Users */}
                                 <h5 className="mt-4 border-bottom pb-2">Users with Access</h5>
                                 {inventory?.allowedUsers?.length === 0 ? (
                                     <p className="text-muted mt-2">No specific users have been granted access yet.</p>

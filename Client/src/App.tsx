@@ -7,6 +7,8 @@ import SearchResults from './pages/SearchResults';
 import Navbar from './components/Navbar';
 import AdminDashboard from './pages/AdminDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
+import PersonalPage from './pages/PersonalPage';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   return (
@@ -18,6 +20,7 @@ function App() {
 
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/profile" element={<PersonalPage/>}/>
           <Route path="/inventory/:id" element={<InventoryDetails />} />
           <Route path="/search" element={<SearchResults />} />
         </Route>

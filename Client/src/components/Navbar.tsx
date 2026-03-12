@@ -100,10 +100,11 @@ export default function Navbar() {
                     {currentUser ? (
                         <div className="d-flex align-items-center">
                             {/* Correctly mapped to Username, with a seamless fallback */}
-                            <span className="text-light me-3 d-none d-md-block">
+<Link to="/profile" className="text-light me-3 d-none d-md-block text-decoration-none nav-link custom-hover">
                                 <i className="bi bi-person-circle me-1"></i>
-                                {currentUser.username || currentUser.Username || 'Lucas'}
-                            </span>
+                                {currentUser.username || currentUser.Username}
+                            </Link>
+
                             <button className="btn btn-outline-danger btn-sm fw-bold" onClick={handleLogout}>
                                 <i className="bi bi-box-arrow-right me-1"></i> {t('Logout')}
                             </button>

@@ -1,17 +1,37 @@
+/* 🟢 GLOBAL DARK MODE OVERRIDES */
 body[data-theme='dark'] {
-    background-color: #121212;
-    color: #e0e0e0;
+    background-color: #121212 !important;
+    color: #e0e0e0 !important;
 }
 
+/* Force Cards, Headers, and specifically bg-white/bg-light classes to turn dark */
 body[data-theme='dark'] .card,
-body[data-theme='dark'] .table {
+body[data-theme='dark'] .card-header,
+body[data-theme='dark'] .card-body,
+body[data-theme='dark'] .bg-white,
+body[data-theme='dark'] .bg-light {
     background-color: #1e1e1e !important;
     color: #e0e0e0 !important;
     border-color: #333 !important;
 }
 
+/* Ensure tables inherit the dark colors perfectly */
+body[data-theme='dark'] .table,
 body[data-theme='dark'] .table th,
 body[data-theme='dark'] .table td {
     background-color: #1e1e1e !important;
     color: #e0e0e0 !important;
+    border-color: #333 !important;
+}
+
+/* Fix List Groups (like the search results and access control lists) */
+body[data-theme='dark'] .list-group-item {
+    background-color: #1e1e1e !important;
+    color: #e0e0e0 !important;
+    border-color: #333 !important;
+}
+
+/* Subtle adjustment for muted text in dark mode so it's readable */
+body[data-theme='dark'] .text-muted {
+    color: #a0a0a0 !important;
 }

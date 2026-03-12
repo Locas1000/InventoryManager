@@ -29,7 +29,7 @@ export default function TagCloud({ selectedTag, onSelectTag }: Props) {
                 <i className="bi bi-tags-fill me-2 text-primary"></i> Filter by Tag
             </h5>
             <div className="d-flex flex-wrap gap-2">
-                {/* 🟢 An "All" button to clear the filter */}
+                {/* An "All" button to clear the filter */}
                 <button
                     className={`btn btn-sm rounded-pill px-3 ${!selectedTag ? 'btn-primary' : 'btn-outline-secondary'}`}
                     onClick={() => onSelectTag(null)}
@@ -37,11 +37,12 @@ export default function TagCloud({ selectedTag, onSelectTag }: Props) {
                     All Inventories
                 </button>
 
-                {/* 🟢 The dynamic tags from the database */}
+                {/* The dynamic tags from the database */}
                 {tags.map(tag => (
                     <button
                         key={tag.name}
-                        className={`btn btn-sm rounded-pill px-3 ${selectedTag === tag.name ? 'btn-primary shadow-sm' : 'btn-outline-info text-dark'}`}
+                        // 🟢 FIXED: Removed 'text-dark' so the text perfectly matches the cyan info border!
+                        className={`btn btn-sm rounded-pill px-3 ${selectedTag === tag.name ? 'btn-primary shadow-sm' : 'btn-outline-info'}`}
                         onClick={() => onSelectTag(tag.name)}
                     >
                         #{tag.name}
