@@ -72,6 +72,10 @@ public class AuthController : ControllerBase
         {
             return BadRequest("User not found.");
         }
+    if (user.IsBlocked)
+    {
+        return StatusCode(403, new { message = "Your account is blocked. Please contact an admin." });
+    }
 
         // 2. Verify the password
         if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))

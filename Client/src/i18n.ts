@@ -212,7 +212,8 @@ const resources = {
             "specifications_label": "Specifications",
             "yes": "Yes",
             "no": "No",
-            "btn_close": "Close"
+            "btn_close": "Close",
+            "err_user_blocked": "Your account has been blocked. Please contact an administrator."
         }
         
     },
@@ -427,6 +428,7 @@ const resources = {
             "yes": "Sí",
             "no": "No",
             "btn_close": "Cerrar",
+            "err_user_blocked": "Tu cuenta ha sido bloqueada. Por favor, contacta a un administrador."
         }
     }
 };
