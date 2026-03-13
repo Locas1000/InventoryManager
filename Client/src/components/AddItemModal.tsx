@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { fetchWithAuth } from "../utils/api";
 import ImageUpload from "./ImageUpload";
+import { useTranslation } from "react-i18next"; // 🟢 NEW
+
 interface Props {
     show: boolean;
     onClose: () => void;
@@ -9,6 +11,7 @@ interface Props {
 }
 
 export default function AddItemModal({ show, onClose, onSuccess, inventory }: Props) {
+    const { t } = useTranslation(); // 🟢 NEW
     const [name, setName] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -59,10 +62,11 @@ export default function AddItemModal({ show, onClose, onSuccess, inventory }: Pr
                 onClose();
             } else {
                 const errorData = await response.json();
-                alert(errorData.message || "Failed to create item.");
+                alert(errorData.message || t('alert_fail_create_item')); // 🟢 TRANSLATED FALLBACK
             }
         } catch (error) {
             console.error("Error:", error);
+            alert(t('alert_fail_create_item'));
         } finally {
             setIsSubmitting(false);
         }
@@ -82,8 +86,9 @@ export default function AddItemModal({ show, onClose, onSuccess, inventory }: Pr
         <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', overflowY: 'auto' }}>
             <div className="modal-dialog modal-lg">
                 <div className="modal-content">
-                    <div className="modal-header bg-light">
-                        <h5 className="modal-title fw-bold">➕ Add Item to {inventory.title}</h5>
+                    {/* 🟢 Removed bg-light for Dark Mode compatibility */}
+                    <div className="modal-header">
+                        <h5 className="modal-title fw-bold">{t('add_item_to')} {inventory.title}</h5>
                         <button type="button" className="btn-close" onClick={onClose}></button>
                     </div>
                     
@@ -91,13 +96,13 @@ export default function AddItemModal({ show, onClose, onSuccess, inventory }: Pr
                         <form id="add-item-form" onSubmit={handleSubmit}>
                             {/* --- STANDARD FIELDS --- */}
                             <div className="mb-4 border-bottom pb-3">
-                                <label className="form-label fw-bold">Item Name <span className="text-danger">*</span></label>
+                                <label className="form-label fw-bold">{t('modal_add_item_name')} <span className="text-danger">*</span></label>
                                 <input type="text" className="form-control" required
                                        value={name} onChange={e => setName(e.target.value)} 
-                                       placeholder="e.g., ThinkPad T14" />
+                                       placeholder={t('placeholder_item_name')} />
                             </div>
                             <div className="mb-4 border-bottom pb-3">
-                                <label className="form-label fw-bold">Item Image (Optional)</label>
+                                <label className="form-label fw-bold">{t('modal_add_item_image')}</label>
                                 {imageUrl ? (
                                     <div className="position-relative mb-2" style={{ width: '150px' }}>
                                         <img src={imageUrl} alt="Preview" className="img-thumbnail" />
@@ -210,10 +215,11 @@ export default function AddItemModal({ show, onClose, onSuccess, inventory }: Pr
                         </form>
                     </div>
                     
-                    <div className="modal-footer bg-light mt-4">
-                        <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
+                    {/* 🟢 Removed bg-light */}
+                    <div className="modal-footer mt-4">
+                        <button type="button" className="btn btn-secondary" onClick={onClose}>{t('btn_cancel')}</button>
                         <button type="submit" form="add-item-form" className="btn btn-success px-4" disabled={isSubmitting}>
-                            {isSubmitting ? "Creating..." : "Save Item"}
+                            {isSubmitting ? t('btn_creating_item') : t('btn_save_item')}
                         </button>
                     </div>
                 </div>
