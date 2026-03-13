@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next'; // 🟢 NEW
 import CreateInventoryModal from '../components/CreateInventoryModal';
 import EditInventoryModal from '../components/EditInventoryModal';
 import { fetchWithAuth } from "../utils/api";
@@ -14,6 +15,7 @@ interface Inventory {
 }
 
 export default function PersonalPage() {
+    const { t } = useTranslation(); // 🟢 NEW
     const [inventories, setInventories] = useState<Inventory[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -53,7 +55,8 @@ export default function PersonalPage() {
     };
 
     const handleDelete = async (idList: number[]) => {
-        if (!window.confirm(`Are you sure you want to delete ${idList.length} inventory/inventories?`)) return;
+        // 🟢 TRANSLATED (Using interpolation for the count)
+        if (!window.confirm(t('confirm_delete_inventories', { count: idList.length }))) return;
         try {
             for (const id of idList) {
                 await fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/inventories/${id}`, { method: 'DELETE' });
@@ -66,10 +69,10 @@ export default function PersonalPage() {
         setSelectedMyIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
     };
 
-    // 🟢 Filter Logic
+    // Filter Logic
     const filteredInventories = inventories.filter(inv => inv.title.toLowerCase().includes(filterText.toLowerCase()));
 
-    // 🟢 Split logic based on ownership vs access
+    // Split logic based on ownership vs access
     const myInventories = filteredInventories.filter(inv => inv.userId === currentUserId);
     const writeAccessInventories = filteredInventories.filter(inv => inv.allowedUserIds?.includes(currentUserId));
 
@@ -78,23 +81,24 @@ export default function PersonalPage() {
     return (
         <div className="container mt-5">
             <div className="d-flex justify-content-between align-items-center mb-4">
-                <h1>My Profile</h1>
-                <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>+ New Inventory</button>
+                {/* 🟢 TRANSLATED */}
+                <h1>{t('my_profile')}</h1>
+                <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>{t('btn_new_inventory')}</button>
             </div>
 
             <input
                 type="text"
                 className="form-control mb-4"
-                placeholder="Filter inventories by title..."
+                placeholder={t('filter_placeholder')} // 🟢 TRANSLATED
                 value={filterText}
                 onChange={e => setFilterText(e.target.value)}
             />
 
             {/* --- TABLE 1: INVENTORIES I OWN --- */}
-            <h3 className="mb-3">Inventories I Own</h3>
+            <h3 className="mb-3">{t('inventories_i_own')}</h3>
             <div className="mb-2 p-2 bg-light border rounded d-flex gap-2">
-                <button className="btn btn-sm btn-outline-warning" disabled={selectedMyIds.length !== 1} onClick={() => handleEdit(selectedMyIds)}>Edit Settings</button>
-                <button className="btn btn-sm btn-outline-danger" disabled={selectedMyIds.length === 0} onClick={() => handleDelete(selectedMyIds)}>Delete</button>
+                <button className="btn btn-sm btn-outline-warning" disabled={selectedMyIds.length !== 1} onClick={() => handleEdit(selectedMyIds)}>{t('btn_edit_settings')}</button>
+                <button className="btn btn-sm btn-outline-danger" disabled={selectedMyIds.length === 0} onClick={() => handleDelete(selectedMyIds)}>{t('btn_delete')}</button>
             </div>
 
             <div className="table-responsive mb-5">
@@ -102,14 +106,15 @@ export default function PersonalPage() {
                     <thead className="table-dark">
                     <tr>
                         <th style={{width: '50px'}} className="text-center">☑</th>
-                        <th>ID</th>
-                        <th>Title</th>
-                        <th>Category</th>
+                        {/* 🟢 TRANSLATED HEADERS */}
+                        <th>{t('table_id')}</th>
+                        <th>{t('table_title')}</th>
+                        <th>{t('table_category')}</th>
                     </tr>
                     </thead>
                     <tbody>
                     {myInventories.length === 0 ? (
-                        <tr><td colSpan={4} className="text-center">No inventories found.</td></tr>
+                        <tr><td colSpan={4} className="text-center">{t('no_inventories_found')}</td></tr>
                     ) : (
                         myInventories.map((inv) => (
                             <tr key={`own-${inv.id}`}>
@@ -127,19 +132,20 @@ export default function PersonalPage() {
             </div>
 
             {/* --- TABLE 2: WRITE ACCESS --- */}
-            <h3 className="mb-3">Inventories with Write Access</h3>
+            <h3 className="mb-3">{t('inventories_write_access')}</h3>
             <div className="table-responsive">
                 <table className="table table-bordered table-hover">
                     <thead className="table-light">
                     <tr>
-                        <th>ID</th>
-                        <th>Title</th>
-                        <th>Category</th>
+                        {/* 🟢 TRANSLATED HEADERS */}
+                        <th>{t('table_id')}</th>
+                        <th>{t('table_title')}</th>
+                        <th>{t('table_category')}</th>
                     </tr>
                     </thead>
                     <tbody>
                     {writeAccessInventories.length === 0 ? (
-                        <tr><td colSpan={3} className="text-center text-muted">You have not been granted write access to any other inventories.</td></tr>
+                        <tr><td colSpan={3} className="text-center text-muted">{t('no_write_access')}</td></tr>
                     ) : (
                         writeAccessInventories.map((inv) => (
                             <tr key={`access-${inv.id}`}>

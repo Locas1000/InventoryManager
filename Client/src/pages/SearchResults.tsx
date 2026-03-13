@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next'; // 🟢 NEW
 
 interface InventoryResult {
     id: number;
@@ -23,6 +24,7 @@ interface SearchData {
 }
 
 export default function SearchResults() {
+    const { t } = useTranslation(); // 🟢 NEW
     const [searchParams] = useSearchParams();
     const query = searchParams.get('q') || '';
 
@@ -55,14 +57,16 @@ export default function SearchResults() {
 
     return (
         <div className="container mt-5">
-            <h2 className="mb-4">🔍 Search Results for <span className="text-primary">"{query}"</span></h2>
+            {/* 🟢 TRANSLATED (Kept the emoji and query exact) */}
+            <h2 className="mb-4">🔍 {t('search_results_for')} <span className="text-primary">"{query}"</span></h2>
 
             <div className="row">
                 {/* 🟢 Column 1: Inventories */}
                 <div className="col-md-6 mb-4">
-                    <h4 className="border-bottom pb-2">📦 Inventories ({results.inventories.length})</h4>
+                    {/* 🟢 TRANSLATED */}
+                    <h4 className="border-bottom pb-2">📦 {t('search_inventories')} ({results.inventories.length})</h4>
                     {results.inventories.length === 0 ? (
-                        <p className="text-muted">No matching inventories found.</p>
+                        <p className="text-muted">{t('no_matching_inventories')}</p>
                     ) : (
                         <div className="list-group">
                             {results.inventories.map(inv => (
@@ -71,7 +75,8 @@ export default function SearchResults() {
                                         <h6 className="mb-0 fw-bold">{inv.title}</h6>
                                         <small className="text-muted">{inv.category}</small>
                                     </div>
-                                    <span className="badge bg-secondary">Inventory</span>
+                                    {/* 🟢 TRANSLATED */}
+                                    <span className="badge bg-secondary">{t('badge_inventory')}</span>
                                 </Link>
                             ))}
                         </div>
@@ -80,18 +85,21 @@ export default function SearchResults() {
 
                 {/* 🟢 Column 2: Items */}
                 <div className="col-md-6 mb-4">
-                    <h4 className="border-bottom pb-2">📄 Items ({results.items.length})</h4>
+                    {/* 🟢 TRANSLATED */}
+                    <h4 className="border-bottom pb-2">📄 {t('search_items')} ({results.items.length})</h4>
                     {results.items.length === 0 ? (
-                        <p className="text-muted">No matching items found.</p>
+                        <p className="text-muted">{t('no_matching_items')}</p>
                     ) : (
                         <div className="list-group">
                             {results.items.map(item => (
                                 <Link key={`item-${item.id}`} to={`/inventory/${item.inventoryId}`} className="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                                     <div>
                                         <h6 className="mb-0 fw-bold">{item.name} <span className="text-muted ms-2 fs-6">({item.customId})</span></h6>
-                                        <small className="text-primary">Found in: {item.inventoryTitle}</small>
+                                        {/* 🟢 TRANSLATED */}
+                                        <small className="text-primary">{t('found_in')} {item.inventoryTitle}</small>
                                     </div>
-                                    <span className="badge bg-info text-dark">Item</span>
+                                    {/* 🟢 TRANSLATED */}
+                                    <span className="badge bg-info text-dark">{t('badge_item')}</span>
                                 </Link>
                             ))}
                         </div>

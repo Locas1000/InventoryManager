@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
 import { fetchWithAuth } from '../utils/api';
+import { useTranslation } from 'react-i18next'; // 🟢 NEW
 
 interface Inventory {
     id: string;
@@ -18,19 +19,20 @@ interface EditInventoryModalProps {
 }
 
 export default function EditInventoryModal({ show, onClose, onSuccess, inventory }: EditInventoryModalProps) {
+    const { t } = useTranslation(); // 🟢 NEW
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [category, setCategory] = useState('');
     const [customIdTemplate, setCustomIdTemplate] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false); // 🟢 NEW
 
     useEffect(() => {
         if (inventory) {
             setTitle(inventory.title ?? '');
             setDescription(inventory.description ?? '');
-            setCategory(inventory.category ?? '');
+            setCategory(inventory.category ?? 'Equipment');
             setCustomIdTemplate(inventory.customIdTemplate ?? '');
         } else {
-            // Reset form when inventory is null to prevent stale data.
             setTitle('');
             setDescription('');
             setCategory('');
@@ -42,6 +44,7 @@ export default function EditInventoryModal({ show, onClose, onSuccess, inventory
         e.preventDefault();
         if (!inventory) return;
 
+        setIsSubmitting(true);
         try {
             const response = await fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/inventories/${inventory.id}`, {
                 method: 'PUT',
@@ -53,22 +56,26 @@ export default function EditInventoryModal({ show, onClose, onSuccess, inventory
                 onSuccess();
                 onClose();
             } else {
-                alert('Failed to update inventory.');
+                alert(t('alert_fail_update_inv')); // 🟢 TRANSLATED
             }
         } catch (error) {
             console.error('Error updating inventory:', error);
+            alert(t('alert_fail_update_inv'));
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     return (
-        <Modal show={show} onHide={onClose}>
+        <Modal show={show} onHide={onClose} centered>
             <Modal.Header closeButton>
-                <Modal.Title>Edit Inventory</Modal.Title>
+                {/* 🟢 TRANSLATED */}
+                <Modal.Title className="fw-bold">{t('edit_inventory_title')}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <Form onSubmit={handleSubmit}>
                     <Form.Group className="mb-3">
-                        <Form.Label>Title</Form.Label>
+                        <Form.Label className="fw-bold">{t('label_title')}</Form.Label>
                         <Form.Control
                             type="text"
                             value={title}
@@ -77,7 +84,7 @@ export default function EditInventoryModal({ show, onClose, onSuccess, inventory
                         />
                     </Form.Group>
                     <Form.Group className="mb-3">
-                        <Form.Label>Description</Form.Label>
+                        <Form.Label className="fw-bold">{t('label_description')}</Form.Label>
                         <Form.Control
                             as="textarea"
                             rows={3}
@@ -86,24 +93,31 @@ export default function EditInventoryModal({ show, onClose, onSuccess, inventory
                         />
                     </Form.Group>
                     <Form.Group className="mb-3">
-                        <Form.Label>Category</Form.Label>
-                        <Form.Control
-                            type="text"
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                        />
+                        <Form.Label className="fw-bold">{t('label_category')}</Form.Label>
+                        {/* 🟢 Updated to match Create logic for DB consistency */}
+                        <Form.Select value={category} onChange={(e) => setCategory(e.target.value)}>
+                            <option value="Equipment">{t('cat_equipment')}</option>
+                            <option value="Software Licenses">{t('cat_software')}</option>
+                            <option value="Office Supplies">{t('cat_office')}</option>
+                            <option value="Vehicles">{t('cat_vehicles')}</option>
+                            <option value="Other">{t('cat_other')}</option>
+                        </Form.Select>
                     </Form.Group>
-                    <Form.Group className="mb-3">
-                        <Form.Label>Custom ID Template</Form.Label>
+                    <Form.Group className="mb-4">
+                        <Form.Label className="fw-bold">{t('label_custom_id_template')}</Form.Label>
                         <Form.Control
                             type="text"
+                            className="font-monospace"
                             value={customIdTemplate}
                             onChange={(e) => setCustomIdTemplate(e.target.value)}
                         />
                     </Form.Group>
-                    <Button variant="primary" type="submit">
-                        Save Changes
-                    </Button>
+                    <div className="d-grid">
+                        <Button variant="primary" type="submit" disabled={isSubmitting}>
+                            {/* 🟢 TRANSLATED */}
+                            {isSubmitting ? t('btn_updating') : t('btn_save_changes')}
+                        </Button>
+                    </div>
                 </Form>
             </Modal.Body>
         </Modal>

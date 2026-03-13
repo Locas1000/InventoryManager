@@ -2,7 +2,8 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import type { DropResult } from '@hello-pangea/dnd';
-
+import ReactMarkdown from 'react-markdown';
+import { useTranslation } from 'react-i18next'; // 🟢 NEW
 import AddItemModal from "../components/AddItemModal";
 import { fetchWithAuth } from "../utils/api";
 import EditItemModal from "../components/EditItemModal";
@@ -11,15 +12,16 @@ import DiscussionBoard from "../components/DiscussionBoard";
 
 export default function InventoryDetails() {
     const { id } = useParams();
+    const { t } = useTranslation(); // 🟢 NEW
     const [inventory, setInventory] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
-    
+
     // Tabs & Modals State
     const [activeTab, setActiveTab] = useState('items');
     const [showAddItemModal, setShowAddItemModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
-    
+
     // Items Selection State
     const [selectedItems, setSelectedItems] = useState<number[]>([]);
     const [itemToView, setItemToView] = useState<any>(null);
@@ -41,7 +43,7 @@ export default function InventoryDetails() {
     const currentUserId = currentUser ? Number(currentUser.id || currentUser.Id || currentUser.userId || currentUser.UserId) : null;
     const isOwnerOrAdmin = inventory && (currentUserId === inventory.userId || currentUser?.role === 'Admin' || currentUser?.Role === 'Admin');
     const hasWriteAccess = isOwnerOrAdmin || inventory?.isPublic || inventory?.allowedUsers?.some((u: any) => u.id === currentUserId);
-    
+
     const fetchInventory = useCallback(() => {
         fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/inventories/${id}?t=${new Date().getTime()}`)
             .then(res => {
@@ -53,7 +55,7 @@ export default function InventoryDetails() {
                 setFormData(data);
                 setIsLoading(false);
                 setSelectedItems([]);
-                
+
                 // Initialize fields
                 setCustomFields([
                     { id: 'string1Name', label: 'String 1', value: data.string1Name },
@@ -84,28 +86,28 @@ export default function InventoryDetails() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 })
-                .then(res => {
-                    if (res.status === 409) {
-                        alert("Conflict! Someone else modified this inventory. Please refresh.");
-                        setIsDirty(false);
-                    } else if (res.ok) {
-                        setIsDirty(false);
-                        setLastSaved(new Date());
-                    }
-                })
-                .catch(err => console.error("Auto-save failed", err));
+                    .then(res => {
+                        if (res.status === 409) {
+                            alert(t('alert_conflict')); // 🟢 TRANSLATED
+                            setIsDirty(false);
+                        } else if (res.ok) {
+                            setIsDirty(false);
+                            setLastSaved(new Date());
+                        }
+                    })
+                    .catch(err => console.error("Auto-save failed", err));
             }
         }, 1000);
         return () => clearInterval(timer);
-    }, [isDirty, formData, id, isOwnerOrAdmin]);
+    }, [isDirty, formData, id, isOwnerOrAdmin, t]); // Added t to dependencies
 
     const handleGrantAccess = async (targetUserId: number) => {
         try {
             const res = await fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/inventories/${id}/access/${targetUserId}`, { method: 'POST' });
             if (res.ok) {
-                setSearchResults([]); 
+                setSearchResults([]);
                 setSearchQuery('');
-                fetchInventory(); 
+                fetchInventory();
             }
         } catch (error) { console.error(error); }
     };
@@ -113,10 +115,10 @@ export default function InventoryDetails() {
     const handleRevokeAccess = async (targetUserId: number) => {
         try {
             const res = await fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/inventories/${id}/access/${targetUserId}`, { method: 'DELETE' });
-            if (res.ok) fetchInventory(); 
+            if (res.ok) fetchInventory();
         } catch (error) { console.error(error); }
     };
-    
+
     const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
@@ -124,9 +126,9 @@ export default function InventoryDetails() {
         setIsDirty(true);
     };
 
-    // 🟢 @hello-pangea/dnd drag handler
+    // @hello-pangea/dnd drag handler
     const handleDragEnd = (result: DropResult) => {
-        if (!result.destination) return; 
+        if (!result.destination) return;
 
         const items = Array.from(customFields);
         const [reorderedItem] = items.splice(result.source.index, 1);
@@ -155,7 +157,8 @@ export default function InventoryDetails() {
 
     const handleDeleteSelected = async () => {
         if (selectedItems.length === 0) return;
-        if (!window.confirm(`Are you sure you want to delete ${selectedItems.length} selected item(s)?`)) return;
+        // 🟢 TRANSLATED (Using interpolation for the count)
+        if (!window.confirm(t('confirm_delete_items', { count: selectedItems.length }))) return;
 
         try {
             for (const itemId of selectedItems) {
@@ -185,17 +188,18 @@ export default function InventoryDetails() {
         if (!inventory) return [];
         const cols = [ { key: 'customId', label: 'ID' }, { key: 'name', label: 'Item Name' } ];
         customFields.forEach(field => {
-            if (field.value) cols.push({ key: field.id.replace('Name', 'Value'), label: field.value });
+            if (field.value) cols.push({ key: field.id.replace('Name', 'Value'), label: field.value }); // field.value is user-generated, NOT translated
         });
         return cols;
     };
 
     if (isLoading) return <div className="text-center mt-5"><div className="spinner-border text-primary"></div></div>;
-    if (!inventory) return <div className="text-center mt-5"><h3>Inventory not found!</h3><Link to="/">Go Home</Link></div>;
+    // 🟢 TRANSLATED
+    if (!inventory) return <div className="text-center mt-5"><h3>{t('inv_not_found')}</h3><Link to="/">{t('go_home')}</Link></div>;
 
     const columns = getDynamicColumns();
 
-    return (
+return (
         <div className="container mt-5 mb-5">
             {/* Header Section */}
             <div className="d-flex align-items-start mb-4">
@@ -205,7 +209,8 @@ export default function InventoryDetails() {
                 <div className="flex-grow-1">
                     <nav aria-label="breadcrumb">
                         <ol className="breadcrumb mb-1">
-                            <li className="breadcrumb-item"><Link to="/">Dashboard</Link></li>
+                            {/* 🟢 TRANSLATED */}
+                            <li className="breadcrumb-item"><Link to="/">{t('dashboard')}</Link></li>
                             <li className="breadcrumb-item active">{inventory.title}</li>
                         </ol>
                     </nav>
@@ -213,40 +218,53 @@ export default function InventoryDetails() {
                         <h1 className="display-6 fw-bold mb-0">{inventory.title}</h1>
                         {isOwnerOrAdmin && (
                             <div className="text-end">
-                                {isDirty ? <span className="badge bg-warning text-dark"><i className="bi bi-arrow-repeat spin"></i> Unsaved Changes</span> 
-                                         : <span className="badge bg-success"><i className="bi bi-cloud-check"></i> Saved</span>}
-                                {lastSaved && <div className="text-muted" style={{fontSize: '0.8rem'}}>Last auto-save: {lastSaved.toLocaleTimeString()}</div>}
+                                {/* 🟢 TRANSLATED */}
+                                {isDirty ? <span className="badge bg-warning text-dark"><i className="bi bi-arrow-repeat spin"></i> {t('unsaved_changes')}</span>
+                                    : <span className="badge bg-success"><i className="bi bi-cloud-check"></i> {t('saved')}</span>}
+                                {/* 🟢 TRANSLATED */}
+                                {lastSaved && <div className="text-muted" style={{fontSize: '0.8rem'}}>{t('last_autosave')} {lastSaved.toLocaleTimeString()}</div>}
                             </div>
                         )}
                     </div>
-                    <span className="badge bg-secondary me-2">{inventory.category}</span>
-                    {inventory.isPublic ? <span className="badge bg-info text-dark">Public</span> : <span className="badge bg-dark">Private</span>}
+                    <div className="mt-2">
+                        {/* 🟢 TRANSLATED Badges, but kept category intact */}
+                        <span className="badge bg-secondary me-2">{inventory.category}</span>
+                        {inventory.isPublic ? <span className="badge bg-info text-dark">{t('public')}</span> : <span className="badge bg-dark">{t('private')}</span>}
+                    </div>
+
+                    {inventory.description && (
+                        <div className="mt-3">
+                            <ReactMarkdown>{inventory.description}</ReactMarkdown>
+                        </div>
+                    )}
+
                 </div>
             </div>
-
-            {/* ROLE-BASED TABS */}
+            
+            {/* 🟢 TRANSLATED TABS */}
             <ul className="nav nav-tabs mb-4">
-                <li className="nav-item"><button className={`nav-link fw-bold ${activeTab === 'items' ? 'active' : ''}`} onClick={() => setActiveTab('items')}>Items</button></li>
-                <li className="nav-item"><button className={`nav-link fw-bold ${activeTab === 'discussion' ? 'active' : ''}`} onClick={() => setActiveTab('discussion')}>Discussion</button></li>
-                
+                <li className="nav-item"><button className={`nav-link fw-bold ${activeTab === 'items' ? 'active' : ''}`} onClick={() => setActiveTab('items')}>{t('tab_items')}</button></li>
+                <li className="nav-item"><button className={`nav-link fw-bold ${activeTab === 'discussion' ? 'active' : ''}`} onClick={() => setActiveTab('discussion')}>{t('tab_discussion')}</button></li>
+
                 {isOwnerOrAdmin && (
                     <>
-                        <li className="nav-item"><button className={`nav-link ${activeTab === 'settings' ? 'active text-primary fw-bold' : 'text-muted'}`} onClick={() => setActiveTab('settings')}>Settings</button></li>
-                        <li className="nav-item"><button className={`nav-link ${activeTab === 'fields' ? 'active text-primary fw-bold' : 'text-muted'}`} onClick={() => setActiveTab('fields')}>Custom Fields</button></li>
-                        <li className="nav-item"><button className={`nav-link ${activeTab === 'access' ? 'active text-primary fw-bold' : 'text-muted'}`} onClick={() => setActiveTab('access')}>Access Control</button></li>
-                        <li className="nav-item"><button className={`nav-link ${activeTab === 'stats' ? 'active text-primary fw-bold' : 'text-muted'}`} onClick={() => setActiveTab('stats')}>Statistics</button></li>
+                        <li className="nav-item"><button className={`nav-link ${activeTab === 'settings' ? 'active text-primary fw-bold' : 'text-muted'}`} onClick={() => setActiveTab('settings')}>{t('tab_settings')}</button></li>
+                        <li className="nav-item"><button className={`nav-link ${activeTab === 'fields' ? 'active text-primary fw-bold' : 'text-muted'}`} onClick={() => setActiveTab('fields')}>{t('tab_fields')}</button></li>
+                        <li className="nav-item"><button className={`nav-link ${activeTab === 'access' ? 'active text-primary fw-bold' : 'text-muted'}`} onClick={() => setActiveTab('access')}>{t('tab_access')}</button></li>
+                        <li className="nav-item"><button className={`nav-link ${activeTab === 'stats' ? 'active text-primary fw-bold' : 'text-muted'}`} onClick={() => setActiveTab('stats')}>{t('tab_stats')}</button></li>
                     </>
                 )}
             </ul>
-            
+
             {/* TAB 1: ITEMS */}
             {activeTab === 'items' && (
                 <>
                     {hasWriteAccess && (
                         <div className="mb-3 p-2 bg-light border rounded d-flex gap-2">
-                            <button className="btn btn-primary" onClick={() => setShowAddItemModal(true)}>+ Add New Item</button>
-                            <button className="btn btn-warning" disabled={selectedItems.length !== 1} onClick={() => setShowEditModal(true)}>Edit Selected</button>
-                            <button className="btn btn-danger" disabled={selectedItems.length === 0} onClick={handleDeleteSelected}>Delete Selected</button>
+                            {/* 🟢 TRANSLATED BUTTONS */}
+                            <button className="btn btn-primary" onClick={() => setShowAddItemModal(true)}>{t('btn_add_item')}</button>
+                            <button className="btn btn-warning" disabled={selectedItems.length !== 1} onClick={() => setShowEditModal(true)}>{t('btn_edit_selected')}</button>
+                            <button className="btn btn-danger" disabled={selectedItems.length === 0} onClick={handleDeleteSelected}>{t('btn_delete_selected')}</button>
                         </div>
                     )}
 
@@ -255,45 +273,46 @@ export default function InventoryDetails() {
                             <div className="table-responsive">
                                 <table className="table table-hover mb-0 align-middle">
                                     <thead className="table-dark">
-                                        <tr>
-                                            <th style={{ width: '50px' }} className="text-center">☑</th>
-                                            {columns.map(col => <th key={col.key}>{col.label}</th>)}
-                                            <th>Likes</th>
-                                        </tr>
+                                    <tr>
+                                        <th style={{ width: '50px' }} className="text-center">☑</th>
+                                        {columns.map(col => <th key={col.key}>{col.label}</th>)}
+                                        {/* 🟢 TRANSLATED HEADER */}
+                                        <th>{t('th_likes')}</th>
+                                    </tr>
                                     </thead>
                                     <tbody>
-                                        {inventory.items.length === 0 ? (
-                                            <tr><td colSpan={columns.length + 2} className="text-center py-5 text-muted">📭 This inventory is empty</td></tr>
-                                        ) : (
-                                            inventory.items.map((item: any) => (
-                                                <tr key={item.id} className={selectedItems.includes(item.id) ? "table-primary" : ""}>
-                                                    <td className="text-center">
-                                                        <input 
-                                                            className="form-check-input border-secondary" 
-                                                            type="checkbox" 
-                                                            checked={selectedItems.includes(item.id)}
-                                                            onChange={() => setSelectedItems(prev => prev.includes(item.id) ? prev.filter(id => id !== item.id) : [...prev, item.id])}
-                                                        />
+                                    {inventory.items.length === 0 ? (
+                                        <tr><td colSpan={columns.length + 2} className="text-center py-5 text-muted">{t('empty_inventory')}</td></tr>
+                                    ) : (
+                                        inventory.items.map((item: any) => (
+                                            <tr key={item.id} className={selectedItems.includes(item.id) ? "table-primary" : ""}>
+                                                <td className="text-center">
+                                                    <input
+                                                        className="form-check-input border-secondary"
+                                                        type="checkbox"
+                                                        checked={selectedItems.includes(item.id)}
+                                                        onChange={() => setSelectedItems(prev => prev.includes(item.id) ? prev.filter(id => id !== item.id) : [...prev, item.id])}
+                                                    />
+                                                </td>
+                                                {columns.map(col => (
+                                                    <td key={col.key}>
+                                                        {col.key === 'name' ? (
+                                                            <span className="fw-bold text-primary text-decoration-underline" style={{cursor: "pointer"}} onClick={() => { setItemToView(item); setShowViewModal(true); }}>
+                                                                {String(item[col.key])}
+                                                            </span>
+                                                        ) : (
+                                                            item[col.key] !== null && item[col.key] !== undefined && item[col.key] !== "" ? String(item[col.key]) : "—"
+                                                        )}
                                                     </td>
-                                                    {columns.map(col => (
-                                                        <td key={col.key}>
-                                                            {col.key === 'name' ? (
-                                                                <span className="fw-bold text-primary text-decoration-underline" style={{cursor: "pointer"}} onClick={() => { setItemToView(item); setShowViewModal(true); }}>
-                                                                    {String(item[col.key])}
-                                                                </span>
-                                                            ) : (
-                                                                item[col.key] !== null && item[col.key] !== undefined && item[col.key] !== "" ? String(item[col.key]) : "—"
-                                                            )}
-                                                        </td>
-                                                    ))}
-                                                    <td>
-                                                        <button className={`btn btn-sm ${item.currentUserLiked ? 'btn-danger' : 'btn-outline-danger'}`} onClick={() => handleLikeToggle(item.id)}>
-                                                            <i className={`bi ${item.currentUserLiked ? 'bi-heart-fill' : 'bi-heart'}`}></i> {item.totalLikes || 0}
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
+                                                ))}
+                                                <td>
+                                                    <button className={`btn btn-sm ${item.currentUserLiked ? 'btn-danger' : 'btn-outline-danger'}`} onClick={() => handleLikeToggle(item.id)}>
+                                                        <i className={`bi ${item.currentUserLiked ? 'bi-heart-fill' : 'bi-heart'}`}></i> {item.totalLikes || 0}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
                                     </tbody>
                                 </table>
                             </div>
@@ -301,6 +320,7 @@ export default function InventoryDetails() {
                     </div>
                 </>
             )}
+
 
             {/* TAB 2: DISCUSSION */}
             {activeTab === 'discussion' && <DiscussionBoard inventoryId={inventory.id} />}
@@ -310,19 +330,20 @@ export default function InventoryDetails() {
                 <div className="row">
                     <div className="col-md-8">
                         <div className="card shadow-sm border-0 p-4">
-                            <h4 className="mb-4">General Settings</h4>
+                            {/* 🟢 TRANSLATED SETTINGS */}
+                            <h4 className="mb-4">{t('settings_general')}</h4>
                             <div className="mb-3">
-                                <label className="form-label fw-bold">Title</label>
+                                <label className="form-label fw-bold">{t('settings_title')}</label>
                                 <input type="text" name="title" className="form-control" value={formData.title || ''} onChange={handleFormChange} />
                             </div>
                             <div className="mb-3">
-                                <label className="form-label fw-bold">Description (Markdown Supported)</label>
+                                <label className="form-label fw-bold">{t('settings_desc')}</label>
                                 <textarea name="description" className="form-control" rows={4} value={formData.description || ''} onChange={handleFormChange} />
                             </div>
                             <div className="mb-3">
-                                <label className="form-label fw-bold">Custom ID Template</label>
+                                <label className="form-label fw-bold">{t('settings_custom_id')}</label>
                                 <input type="text" name="customIdTemplate" className="form-control font-monospace" value={formData.customIdTemplate || ''} onChange={handleFormChange} />
-                                <small className="text-muted">Changes here will only apply to newly created items.</small>
+                                <small className="text-muted">{t('settings_custom_id_help')}</small>
                             </div>
                         </div>
                     </div>
@@ -334,9 +355,10 @@ export default function InventoryDetails() {
                 <div className="row">
                     <div className="col-md-8">
                         <div className="card shadow-sm border-0 p-4">
-                            <h4 className="mb-4">Manage Custom Fields</h4>
-                            <p className="text-muted">Drag and drop to reorder how fields are displayed in the table. Changes auto-save.</p>
-                            
+                            {/* 🟢 TRANSLATED FIELDS UI */}
+                            <h4 className="mb-4">{t('fields_manage')}</h4>
+                            <p className="text-muted">{t('fields_help')}</p>
+
                             <DragDropContext onDragEnd={handleDragEnd}>
                                 <Droppable droppableId="custom-fields-list">
                                     {(provided) => (
@@ -353,20 +375,21 @@ export default function InventoryDetails() {
                                                                 backgroundColor: 'white' // Prevents transparent background while dragging
                                                             }}
                                                         >
-                                                            <span 
-                                                                {...provided.dragHandleProps} 
+                                                            <span
+                                                                {...provided.dragHandleProps}
                                                                 className="me-3 text-muted px-2 py-1"
                                                                 style={{ cursor: 'grab' }}
                                                             >
                                                                 <i className="bi bi-grip-vertical fs-5"></i>
                                                             </span>
+                                                            {/* We leave field.label untranslated as it is the default state/value */}
                                                             <span className="me-3 fw-bold" style={{width: '100px'}}>{field.label}</span>
-                                                            <input 
-                                                                type="text" 
-                                                                className="form-control" 
-                                                                placeholder="Field Display Name (leave blank to hide)" 
-                                                                value={field.value || ''} 
-                                                                onChange={e => handleFieldChange(field.id, e.target.value)} 
+                                                            <input
+                                                                type="text"
+                                                                className="form-control"
+                                                                placeholder={t('fields_placeholder')}
+                                                                value={field.value || ''}
+                                                                onChange={e => handleFieldChange(field.id, e.target.value)}
                                                             />
                                                         </div>
                                                     )}
@@ -388,40 +411,41 @@ export default function InventoryDetails() {
                 <div className="row">
                     <div className="col-md-6">
                         <div className="card shadow-sm border-0 p-4 mb-4">
-                            <h4 className="mb-3">Visibility</h4>
+                            {/* 🟢 TRANSLATED ACCESS UI */}
+                            <h4 className="mb-3">{t('access_visibility')}</h4>
                             <div className="form-check form-switch fs-5">
                                 <input className="form-check-input" type="checkbox" name="isPublic" checked={formData.isPublic || false} onChange={handleFormChange} />
-                                <label className="form-check-label ms-2">Public Inventory</label>
+                                <label className="form-check-label ms-2">{t('access_public')}</label>
                             </div>
-                            <small className="text-muted d-block mt-2">If public, any registered user can add and edit items.</small>
+                            <small className="text-muted d-block mt-2">{t('access_public_help')}</small>
                         </div>
 
                         {!formData.isPublic && (
                             <div className="card shadow-sm border-0 p-4">
-                                <h4 className="mb-3">Grant Write Access</h4>
-                                <input type="text" className="form-control mb-3" placeholder="Search users by name or email..." value={searchQuery} onChange={handleUserSearch} />
-                                
+                                <h4 className="mb-3">{t('access_grant')}</h4>
+                                <input type="text" className="form-control mb-3" placeholder={t('access_search')} value={searchQuery} onChange={handleUserSearch} />
+
                                 {searchResults.length > 0 && (
                                     <ul className="list-group mb-4">
                                         {searchResults.map(u => (
                                             <li key={`search-${u.id}`} className="list-group-item d-flex justify-content-between align-items-center bg-light">
                                                 <span><i className="bi bi-person me-2"></i>{u.username} <small className="text-muted">({u.email})</small></span>
-                                                <button type="button" className="btn btn-sm btn-success" onClick={() => handleGrantAccess(u.id)}>+ Add</button>
+                                                <button type="button" className="btn btn-sm btn-success" onClick={() => handleGrantAccess(u.id)}>{t('access_btn_add')}</button>
                                             </li>
                                         ))}
                                     </ul>
                                 )}
 
-                                <h5 className="mt-4 border-bottom pb-2">Users with Access</h5>
+                                <h5 className="mt-4 border-bottom pb-2">{t('access_users_with')}</h5>
                                 {inventory?.allowedUsers?.length === 0 ? (
-                                    <p className="text-muted mt-2">No specific users have been granted access yet.</p>
+                                    <p className="text-muted mt-2">{t('access_no_users')}</p>
                                 ) : (
                                     <ul className="list-group">
                                         {inventory?.allowedUsers?.map((u: any) => (
                                             <li key={`allowed-${u.id}`} className="list-group-item d-flex justify-content-between align-items-center">
                                                 <span><i className="bi bi-person-check-fill text-primary me-2"></i>{u.username}</span>
                                                 <button className="btn btn-sm btn-outline-danger" onClick={() => handleRevokeAccess(u.id)}>
-                                                    <i className="bi bi-x-lg"></i> Remove
+                                                    <i className="bi bi-x-lg"></i> {t('access_btn_remove')}
                                                 </button>
                                             </li>
                                         ))}
@@ -436,24 +460,25 @@ export default function InventoryDetails() {
             {/* TAB 6: STATISTICS (Owner/Admin Only) */}
             {activeTab === 'stats' && isOwnerOrAdmin && (
                 <div className="card shadow-sm border-0 p-4">
-                    <h4 className="mb-4">Inventory Statistics</h4>
+                    {/* 🟢 TRANSLATED STATS UI */}
+                    <h4 className="mb-4">{t('stats_title')}</h4>
                     <div className="row text-center">
                         <div className="col-md-4 mb-3">
                             <div className="p-3 bg-light rounded border">
                                 <h3>{inventory.items.length}</h3>
-                                <span className="text-muted">Total Items</span>
+                                <span className="text-muted">{t('stats_total_items')}</span>
                             </div>
                         </div>
                         <div className="col-md-4 mb-3">
                             <div className="p-3 bg-light rounded border">
                                 <h3>{inventory.items.reduce((acc: number, item: any) => acc + (item.totalLikes || 0), 0)}</h3>
-                                <span className="text-muted">Total Likes</span>
+                                <span className="text-muted">{t('stats_total_likes')}</span>
                             </div>
                         </div>
                         <div className="col-md-4 mb-3">
                             <div className="p-3 bg-light rounded border">
                                 <h3>{customFields.filter(f => f.value).length}</h3>
-                                <span className="text-muted">Active Custom Fields</span>
+                                <span className="text-muted">{t('stats_active_fields')}</span>
                             </div>
                         </div>
                     </div>

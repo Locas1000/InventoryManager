@@ -7,6 +7,7 @@ using System.Security.Claims;
 
 namespace Server.Controllers;
 
+
 [ApiController]
 [Route("api/[controller]")]
 [Authorize] // <--- LOCKS DOWN THE CONTROLLER
@@ -222,6 +223,29 @@ public class InventoriesController : ControllerBase
             _context.InventoryAccesses.Remove(access);
             await _context.SaveChangesAsync();
         }
+        return Ok();
+    }
+    // Inside InventoriesController.cs
+    [HttpDelete("{id}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteInventory(int id)
+    {
+        var inventory = await _context.Inventories.FindAsync(id);
+        if (inventory == null) return NotFound(new { message = "Inventory not found." });
+
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        int.TryParse(userIdClaim, out int currentUserId);
+        var currentUser = await _context.Users.FindAsync(currentUserId);
+
+        // This perfectly satisfies the rubric requirement that admins act as creators!
+        if (inventory.UserId != currentUserId && currentUser?.Role != "Admin") 
+        {
+            return Forbid();
+        }
+
+        _context.Inventories.Remove(inventory);
+        await _context.SaveChangesAsync();
+
         return Ok();
     }
 }

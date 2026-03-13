@@ -1,25 +1,29 @@
-import React, { useState, useEffect, useRef} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
+import { useTranslation } from 'react-i18next'; // 🟢 NEW
 
-const AVAILABLE_ELEMENTS = [
-    { id: 'fixed', label: 'Fixed Text', type: 'FIXED:', defaultVal: 'INV-' },
-    { id: 'date', label: 'Date/Time', type: 'DATE:', defaultVal: 'yyyyMMdd' },
-    { id: 'seq', label: 'Sequence', type: 'SEQ:', defaultVal: 'D3' },
-    { id: 'rnd6', label: 'Random (6-Digit)', type: 'RND6', defaultVal: '' },
-    { id: 'rnd9', label: 'Random (9-Digit)', type: 'RND9', defaultVal: '' },
-    { id: 'rnd20', label: 'Random (20-bit)', type: 'RND20BIT', defaultVal: '' },
-    { id: 'rnd32', label: 'Random (32-bit)', type: 'RND32BIT', defaultVal: '' },
-    { id: 'guid', label: 'GUID', type: 'GUID', defaultVal: '' }
-];
-
+// We moved the definition inside the component or updated labels dynamically
 interface CustomIdBuilderProps {
     initialTemplate: string;
     onTemplateChange: (template: string) => void;
 }
 
 export default function CustomIdBuilder({ initialTemplate, onTemplateChange }: CustomIdBuilderProps) {
+    const { t } = useTranslation(); // 🟢 NEW
+
+    // 🟢 UPDATED: Mapping labels to translation keys
+    const AVAILABLE_ELEMENTS = [
+        { id: 'fixed', label: t('el_fixed'), type: 'FIXED:', defaultVal: 'INV-' },
+        { id: 'date', label: t('el_date'), type: 'DATE:', defaultVal: 'yyyyMMdd' },
+        { id: 'seq', label: t('el_seq'), type: 'SEQ:', defaultVal: 'D3' },
+        { id: 'rnd6', label: t('el_rnd6'), type: 'RND6', defaultVal: '' },
+        { id: 'rnd9', label: t('el_rnd9'), type: 'RND9', defaultVal: '' },
+        { id: 'rnd20', label: t('el_rnd20'), type: 'RND20BIT', defaultVal: '' },
+        { id: 'rnd32', label: t('el_rnd32'), type: 'RND32BIT', defaultVal: '' },
+        { id: 'guid', label: t('el_guid'), type: 'GUID', defaultVal: '' }
+    ];
+
     const [activeBlocks, setActiveBlocks] = useState<any[]>([]);
-    
     const isInternalUpdate = useRef(false);
     
     useEffect(() => {
@@ -54,7 +58,6 @@ export default function CustomIdBuilder({ initialTemplate, onTemplateChange }: C
         onTemplateChange(templateString);
     };
 
-    // 🟢 NEW: Handle typing inside the blocks
     const handleValueChange = (uniqueId: string, newValue: string) => {
         const newBlocks = activeBlocks.map(b => 
             b.uniqueId === uniqueId ? { ...b, currentValue: newValue } : b
@@ -67,7 +70,6 @@ export default function CustomIdBuilder({ initialTemplate, onTemplateChange }: C
         const { source, destination } = result;
 
         if (!destination) {
-            // Remove elements by dragging them outside the form
             if (source.droppableId === 'active-zone') {
                 const newBlocks = Array.from(activeBlocks);
                 newBlocks.splice(source.index, 1);
@@ -78,7 +80,6 @@ export default function CustomIdBuilder({ initialTemplate, onTemplateChange }: C
         }
 
         if (source.droppableId === 'active-zone' && destination.droppableId === 'active-zone') {
-            // Reorder ID elements via drag-and-drop
             const newBlocks = Array.from(activeBlocks);
             const [reorderedItem] = newBlocks.splice(source.index, 1);
             newBlocks.splice(destination.index, 0, reorderedItem);
@@ -87,7 +88,6 @@ export default function CustomIdBuilder({ initialTemplate, onTemplateChange }: C
         }
 
         if (source.droppableId === 'pool-zone' && destination.droppableId === 'active-zone') {
-            // Add new elements
             const itemToAdd = AVAILABLE_ELEMENTS[source.index];
             const newBlock = { ...itemToAdd, uniqueId: `block-${Date.now()}`, currentValue: itemToAdd.defaultVal };
             const newBlocks = Array.from(activeBlocks);
@@ -97,11 +97,10 @@ export default function CustomIdBuilder({ initialTemplate, onTemplateChange }: C
         }
     };
 
-    // 🟢 NEW: Generate the visual preview string
     const generatePreview = () => {
         return activeBlocks.map(b => {
             if (b.id === 'fixed') return b.currentValue;
-            if (b.id === 'date') return '20260303'; // Mock date for preview
+            if (b.id === 'date') return '20260303'; 
             if (b.id === 'seq') return b.currentValue === 'D3' ? '001' : b.currentValue === 'D4' ? '0001' : '1';
             if (b.id.startsWith('rnd')) return '8492';
             if (b.id === 'guid') return 'A1B2C3D4';
@@ -113,7 +112,8 @@ export default function CustomIdBuilder({ initialTemplate, onTemplateChange }: C
         <DragDropContext onDragEnd={onDragEnd}>
             <div className="row mt-3 mb-4">
                 <div className="col-md-4">
-                    <h6 className="text-secondary">Available Elements</h6>
+                    {/* 🟢 TRANSLATED */}
+                    <h6 className="text-secondary">{t('available_elements')}</h6>
                     <Droppable droppableId="pool-zone" isDropDisabled={true}>
                         {(provided) => (
                             <div ref={provided.innerRef} {...provided.droppableProps} className="list-group">
@@ -140,9 +140,10 @@ export default function CustomIdBuilder({ initialTemplate, onTemplateChange }: C
 
                 <div className="col-md-8">
                     <div className="d-flex justify-content-between align-items-center mb-2">
-                        <h6 className="text-secondary mb-0">Active Format Format</h6>
-                        {/* Help popover guide requirement */}
-                        <span className="badge bg-info text-dark" title="Drag elements here. For sequence, D3 means 001. Drag blocks outside this box to delete them.">? Help</span>
+                        {/* 🟢 TRANSLATED */}
+                        <h6 className="text-secondary mb-0">{t('active_format')}</h6>
+                        {/* 🟢 TRANSLATED (title prop) */}
+                        <span className="badge bg-info text-dark" title={t('id_builder_help')}>? Help</span>
                     </div>
                     
                     <Droppable droppableId="active-zone" direction="horizontal">
@@ -153,7 +154,8 @@ export default function CustomIdBuilder({ initialTemplate, onTemplateChange }: C
                                 className={`p-3 border rounded d-flex flex-wrap gap-2 ${snapshot.isDraggingOver ? 'bg-light border-primary' : 'bg-white'}`}
                                 style={{ minHeight: '80px' }}
                             >
-                                {activeBlocks.length === 0 && <span className="text-muted mt-1">Drop elements here to build your ID format...</span>}
+                                {/* 🟢 TRANSLATED */}
+                                {activeBlocks.length === 0 && <span className="text-muted mt-1">{t('id_builder_placeholder')}</span>}
                                 
                                 {activeBlocks.map((block, index) => (
                                     <Draggable key={block.uniqueId} draggableId={block.uniqueId} index={index}>
@@ -167,7 +169,6 @@ export default function CustomIdBuilder({ initialTemplate, onTemplateChange }: C
                                                 <i className="bi bi-grip-vertical me-1 opacity-50"></i>
                                                 <span className="me-2">{block.label}</span>
                                                 
-                                                {/* 🟢 NEW: Conditional inputs for configurable blocks */}
                                                 {(block.id === 'fixed' || block.id === 'date' || block.id === 'seq') && (
                                                     <input 
                                                         type="text" 
@@ -187,7 +188,8 @@ export default function CustomIdBuilder({ initialTemplate, onTemplateChange }: C
                     </Droppable>
 
                     <div className="mt-3 p-3 bg-light border rounded">
-                        <strong className="text-secondary">Live Preview: </strong>
+                        {/* 🟢 TRANSLATED */}
+                        <strong className="text-secondary">{t('live_preview')} </strong>
                         <span className="fs-5 text-primary fw-bold ms-2">
                             {generatePreview() || '---'}
                         </span>

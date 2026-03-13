@@ -1,8 +1,10 @@
 // src/pages/Register.tsx
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useTranslation } from 'react-i18next'; // 🟢 NEW
 
 export default function Register() {
+    const { t } = useTranslation(); // 🟢 NEW
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -17,7 +19,7 @@ export default function Register() {
         setError(null);
 
         if (password !== confirmPassword) {
-            setError("Passwords do not match.");
+            setError(t('err_passwords_match')); // 🟢 TRANSLATED
             return;
         }
 
@@ -33,15 +35,15 @@ export default function Register() {
 
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(errorText || "Registration failed. Please try again.");
+                throw new Error(errorText || t('err_register_failed')); // 🟢 TRANSLATED Fallback
             }
 
             // Success! Send them to the login page
-            alert("Registration successful! Please sign in with your new account.");
+            alert(t('msg_register_success')); // 🟢 TRANSLATED
             navigate('/login');
 
         } catch (err: any) {
-            setError(err.message);
+            setError(err.message); // Backend errors will display here (we could also translate specific backend strings if needed later)
         } finally {
             setIsLoading(false);
         }
@@ -53,13 +55,13 @@ export default function Register() {
                 <div className="col-md-6 col-lg-4">
                     <div className="card shadow-sm border-0">
                         <div className="card-body p-4">
-                            <h2 className="text-center mb-4 fw-bold">Create Account</h2>
+                            <h2 className="text-center mb-4 fw-bold">{t('register_header')}</h2>
 
                             {error && <div className="alert alert-danger">{error}</div>}
 
                             <form onSubmit={handleRegister}>
                                 <div className="mb-3">
-                                    <label className="form-label text-muted">Username</label>
+                                    <label className="form-label text-muted">{t('username_label')}</label>
                                     <input
                                         type="text"
                                         className="form-control form-control-lg"
@@ -70,7 +72,7 @@ export default function Register() {
                                     />
                                 </div>
                                 <div className="mb-3">
-                                    <label className="form-label text-muted">Email address</label>
+                                    <label className="form-label text-muted">{t('email_address_label')}</label>
                                     <input
                                         type="email"
                                         className="form-control form-control-lg"
@@ -80,7 +82,7 @@ export default function Register() {
                                     />
                                 </div>
                                 <div className="mb-3">
-                                    <label className="form-label text-muted">Password</label>
+                                    <label className="form-label text-muted">{t('password_label')}</label>
                                     <input
                                         type="password"
                                         className="form-control form-control-lg"
@@ -91,7 +93,7 @@ export default function Register() {
                                     />
                                 </div>
                                 <div className="mb-4">
-                                    <label className="form-label text-muted">Re-enter Password</label>
+                                    <label className="form-label text-muted">{t('reenter_password_label')}</label>
                                     <input
                                         type="password"
                                         className="form-control form-control-lg"
@@ -105,11 +107,11 @@ export default function Register() {
                                     className="btn btn-success btn-lg w-100 mb-3"
                                     disabled={isLoading}
                                 >
-                                    {isLoading ? "Creating account..." : "Sign Up"}
+                                    {isLoading ? t('btn_creating_account') : t('btn_sign_up')}
                                 </button>
 
                                 <div className="text-center text-muted">
-                                    Already have an account? <Link to="/login" className="text-decoration-none">Sign In</Link>
+                                    {t('already_have_account')} <Link to="/login" className="text-decoration-none">{t('sign_in_link')}</Link>
                                 </div>
                             </form>
 

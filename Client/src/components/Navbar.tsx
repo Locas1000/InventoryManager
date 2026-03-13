@@ -100,7 +100,7 @@ export default function Navbar() {
                     {currentUser ? (
                         <div className="d-flex align-items-center">
                             {/* Correctly mapped to Username, with a seamless fallback */}
-<Link to="/profile" className="text-light me-3 d-none d-md-block text-decoration-none nav-link custom-hover">
+                            <Link to="/profile" className="text-light me-3 text-decoration-none nav-link custom-hover">
                                 <i className="bi bi-person-circle me-1"></i>
                                 {currentUser.username || currentUser.Username}
                             </Link>

@@ -35,3 +35,37 @@ body[data-theme='dark'] .list-group-item {
 body[data-theme='dark'] .text-muted {
     color: #a0a0a0 !important;
 }
+/* Fix Form Controls (Search Bars, Text Inputs, Selects) in Dark Mode */
+body[data-theme='dark'] .form-control,
+body[data-theme='dark'] .form-select,
+body[data-theme='dark'] .input-group-text {
+    background-color: #2a2a2a !important;
+    color: #e0e0e0 !important;
+    border-color: #444 !important;
+}
+
+/* Make the placeholder text visible but subtle */
+body[data-theme='dark'] .form-control::placeholder {
+    color: #888 !important;
+}
+
+/* Keep the focus outline looking good in dark mode */
+body[data-theme='dark'] .form-control:focus {
+    background-color: #2a2a2a !important;
+    color: #ffffff !important;
+    border-color: #6ea8fe !important; /* Lighter primary blue */
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+}
+/* 🟢 Fix Bootstrap Modals in Dark Mode */
+body[data-theme='dark'] .modal-content,
+body[data-theme='dark'] .modal-header,
+body[data-theme='dark'] .modal-footer {
+    background-color: #1e1e1e !important;
+    color: #e0e0e0 !important;
+    border-color: #333 !important;
+}
+
+/* Make the 'X' close button visible on dark backgrounds */
+body[data-theme='dark'] .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}

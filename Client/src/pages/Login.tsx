@@ -3,8 +3,10 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import GitHubLogin from 'react-github-login';
 import { GoogleLogin } from '@react-oauth/google';
+import { useTranslation } from 'react-i18next'; // 🟢 NEW
 
 export default function Login() {
+    const { t } = useTranslation(); // 🟢 NEW
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
@@ -12,7 +14,7 @@ export default function Login() {
 
     const navigate = useNavigate();
 
-    // 🟢 Standard Form Login
+    // Standard Form Login
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
@@ -41,7 +43,7 @@ export default function Login() {
         }
     };
 
-    // 🟢 Added back the Google handler!
+    // Google Handler
     const handleGoogleSuccess = async (response: any) => {
         if (!response.credential) return;
 
@@ -65,7 +67,7 @@ export default function Login() {
         }
     };
 
-    // 🟢 GitHub Handler
+    // GitHub Handler
     const handleGithubSuccess = async (response: { code: string }) => {
         try {
             const res = await fetch('https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/auth/github', {
@@ -92,14 +94,15 @@ return (
         <div className="row justify-content-center">
             <div className="col-md-6">
                 <div className="card shadow p-4">
-                    <h2 className="text-center">Login</h2>
+                    {/* 🟢 TRANSLATED */}
+                    <h2 className="text-center">{t('login_header')}</h2>
                     <hr />
 
-                    {/* 🟢 RESTORED: Your original Email/Password Form */}
                     <form onSubmit={handleLogin}>
                         {error && <div className="alert alert-danger">{error}</div>}
                         <div className="mb-3">
-                            <label className="form-label">Email</label>
+                            {/* 🟢 TRANSLATED */}
+                            <label className="form-label">{t('email_label')}</label>
                             <input 
                                 type="email" 
                                 className="form-control" 
@@ -109,7 +112,8 @@ return (
                             />
                         </div>
                         <div className="mb-3">
-                            <label className="form-label">Password</label>
+                            {/* 🟢 TRANSLATED */}
+                            <label className="form-label">{t('password_label')}</label>
                             <input 
                                 type="password" 
                                 className="form-control" 
@@ -119,11 +123,13 @@ return (
                             />
                         </div>
                         <button type="submit" className="btn btn-primary w-100" disabled={isLoading}>
-                            {isLoading ? "Logging in..." : "Login"}
+                            {/* 🟢 TRANSLATED */}
+                            {isLoading ? t('btn_logging_in') : t('btn_login')}
                         </button>
                     </form>
 
-                    <div className="text-center my-3 text-muted">OR</div>
+                    {/* 🟢 TRANSLATED */}
+                    <div className="text-center my-3 text-muted">{t('or_divider')}</div>
 
                     {/* Social Buttons Section */}
                     <div className="d-flex flex-column align-items-center gap-3">
@@ -132,18 +138,20 @@ return (
                             onError={() => console.error('Google Login Failed')}
                         />
 
+                        {/* 🟢 TRANSLATED (buttonText prop) */}
                         <GitHubLogin
                             clientId={import.meta.env.VITE_GITHUB_CLIENT_ID || ''}
                             onSuccess={handleGithubSuccess}
                             onFailure={(res) => console.error('GitHub Login Failed', res)}
                             className="btn btn-dark w-100"
-                            buttonText="Login with GitHub"
+                            buttonText={t('btn_github_login')}
                             redirectUri="https://orange-smoke-0ae62950f.6.azurestaticapps.net/login" 
                         />
                     </div>
                     
                     <p className="mt-3 text-center">
-                        Don't have an account? <Link to="/register">Register here</Link>
+                        {/* 🟢 TRANSLATED */}
+                        {t('no_account')} <Link to="/register">{t('register_here')}</Link>
                     </p>
                 </div>
             </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { fetchWithAuth } from "../utils/api";
+import { useTranslation } from "react-i18next"; // 🟢 NEW
 
 interface Props {
     show: boolean;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function EditItemModal({ show, onClose, onSuccess, inventory, item }: Props) {
+    const { t } = useTranslation(); // 🟢 NEW
     const [name, setName] = useState("");
     const [customId, setCustomId] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -21,7 +23,7 @@ export default function EditItemModal({ show, onClose, onSuccess, inventory, ite
         bool1Value: false, bool2Value: false, bool3Value: false
     });
 
-    // 🟢 Pre-fill the form when the modal opens with a specific item
+    // Pre-fill the form when the modal opens with a specific item
     useEffect(() => {
         if (item) {
             setName(item.name || "");
@@ -51,7 +53,7 @@ export default function EditItemModal({ show, onClose, onSuccess, inventory, ite
 
         const updatedItem = {
             name,
-            customId, // Custom IDs are editable in the item form [cite: 95]
+            customId, 
             ...customValues,
             number1Value: customValues.number1Value === "" ? null : Number(customValues.number1Value),
             number2Value: customValues.number2Value === "" ? null : Number(customValues.number2Value),
@@ -70,10 +72,11 @@ export default function EditItemModal({ show, onClose, onSuccess, inventory, ite
                 onClose();
             } else {
                 const errorData = await response.json();
-                alert(errorData.message || "Failed to update item.");
+                alert(errorData.message || t('alert_fail_update_item'));
             }
         } catch (error) {
             console.error("Error:", error);
+            alert(t('alert_fail_update_item'));
         } finally {
             setIsSubmitting(false);
         }
@@ -91,14 +94,29 @@ export default function EditItemModal({ show, onClose, onSuccess, inventory, ite
         <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', overflowY: 'auto' }}>
             <div className="modal-dialog modal-lg">
                 <div className="modal-content">
-                    <div className="modal-header bg-warning-subtle">
-                        <h5 className="modal-title fw-bold">✏️ Edit Item: {item.name}</h5>
+                    {/* 🟢 Removed bg-warning-subtle for Dark Mode compatibility */}
+                    <div className="modal-header">
+                        <h5 className="modal-title fw-bold">{t('edit_item_title')} {item.name}</h5>
                         <button type="button" className="btn-close" onClick={onClose}></button>
                     </div>
 
                     <div className="modal-body">
                         <form id="edit-item-form" onSubmit={handleSubmit}>
                             <div className="row g-3">
+                                {/* Standard Fields */}
+                                <div className="col-md-6">
+                                    <label className="form-label fw-bold">{t('modal_add_item_name')}</label>
+                                    <input type="text" className="form-control" required
+                                           value={name} onChange={e => setName(e.target.value)} />
+                                </div>
+                                <div className="col-md-6">
+                                    <label className="form-label fw-bold">{t('label_custom_id')}</label>
+                                    <input type="text" className="form-control font-monospace" required
+                                           value={customId} onChange={e => setCustomId(e.target.value)} />
+                                </div>
+
+                                <hr className="my-4" />
+
                                 {/* 1. Strings */}
                                 {inventory.string1Name && (
                                     <div className="col-md-6">
@@ -200,10 +218,11 @@ export default function EditItemModal({ show, onClose, onSuccess, inventory, ite
                         </form>
                     </div>
 
-                    <div className="modal-footer bg-light">
-                        <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
+                    {/* 🟢 Removed bg-light */}
+                    <div className="modal-footer">
+                        <button type="button" className="btn btn-secondary" onClick={onClose}>{t('btn_cancel')}</button>
                         <button type="submit" form="edit-item-form" className="btn btn-warning px-4" disabled={isSubmitting}>
-                            {isSubmitting ? "Saving..." : "Update Item"}
+                            {isSubmitting ? t('btn_updating_item') : t('btn_update_item')}
                         </button>
                     </div>
                 </div>

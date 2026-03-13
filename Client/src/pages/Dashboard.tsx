@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next'; // 🟢 NEW: Import the translation hook
 import TagCloud from "../components/TagCloud";
-
+import ReactMarkdown from 'react-markdown';
 interface Inventory {
     id: number;
     title: string;
@@ -76,7 +76,11 @@ export default function Dashboard() {
                                                 </span>
                                             </td>
                                             <td>@{inv.creatorName}</td>
-                                            <td className="text-truncate" style={{maxWidth: '250px'}}>{inv.description}</td>
+                                            <td style={{maxWidth: '250px'}}>
+                                                <div className="text-truncate" style={{ maxHeight: '1.5em' }}>
+                                                    <ReactMarkdown>{inv.description}</ReactMarkdown>
+                                                </div>
+                                            </td>
                                         </tr>
                                     ))
                                 )}

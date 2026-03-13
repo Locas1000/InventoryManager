@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next'; // 🟢 NEW
 
 interface TagData {
     name: string;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function TagCloud({ selectedTag, onSelectTag }: Props) {
+    const { t } = useTranslation(); // 🟢 NEW
     const [tags, setTags] = useState<TagData[]>([]);
 
     useEffect(() => {
@@ -21,12 +23,14 @@ export default function TagCloud({ selectedTag, onSelectTag }: Props) {
             .catch(err => console.error("Error fetching tag cloud:", err));
     }, []);
 
-    if (tags.length === 0) return null; // Don't show anything if there are no tags yet
+    if (tags.length === 0) return null; 
 
     return (
-        <div className="mb-4 p-4 bg-light rounded shadow-sm border-0">
+        /* 🟢 Removed bg-light for Dark Mode compatibility */
+        <div className="mb-4 p-4 rounded shadow-sm border">
             <h5 className="fw-bold mb-3 text-secondary">
-                <i className="bi bi-tags-fill me-2 text-primary"></i> Filter by Tag
+                {/* 🟢 TRANSLATED */}
+                <i className="bi bi-tags-fill me-2 text-primary"></i> {t('filter_by_tag')}
             </h5>
             <div className="d-flex flex-wrap gap-2">
                 {/* An "All" button to clear the filter */}
@@ -34,14 +38,14 @@ export default function TagCloud({ selectedTag, onSelectTag }: Props) {
                     className={`btn btn-sm rounded-pill px-3 ${!selectedTag ? 'btn-primary' : 'btn-outline-secondary'}`}
                     onClick={() => onSelectTag(null)}
                 >
-                    All Inventories
+                    {/* 🟢 TRANSLATED */}
+                    {t('all_inventories')}
                 </button>
 
                 {/* The dynamic tags from the database */}
                 {tags.map(tag => (
                     <button
                         key={tag.name}
-                        // 🟢 FIXED: Removed 'text-dark' so the text perfectly matches the cyan info border!
                         className={`btn btn-sm rounded-pill px-3 ${selectedTag === tag.name ? 'btn-primary shadow-sm' : 'btn-outline-info'}`}
                         onClick={() => onSelectTag(tag.name)}
                     >

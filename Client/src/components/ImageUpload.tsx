@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next'; // 🟢 NEW
 
 declare global {
     interface Window {
@@ -11,10 +12,11 @@ interface Props {
 }
 
 export default function ImageUpload({ onUploadSuccess }: Props) {
+    const { t } = useTranslation(); // 🟢 NEW
     const cloudinaryRef = useRef<any>();
     const widgetRef = useRef<any>();
 
-    // 🟢 NEW: Store the function in a ref so it doesn't trigger re-renders
+    // Store the function in a ref so it doesn't trigger re-renders
     const callbackRef = useRef(onUploadSuccess);
     useEffect(() => {
         callbackRef.current = onUploadSuccess;
@@ -35,7 +37,7 @@ export default function ImageUpload({ onUploadSuccess }: Props) {
                 callbackRef.current(result.info.secure_url);
             }
         });
-    }, []); // 🟢 THE FIX: This empty array means it only runs ONCE, preventing the focus stealing!
+    }, []); 
 
     return (
         <button
@@ -43,7 +45,9 @@ export default function ImageUpload({ onUploadSuccess }: Props) {
             className="btn btn-outline-secondary w-100"
             onClick={() => widgetRef.current?.open()}
         >
-            <i className="bi bi-cloud-arrow-up me-2"></i> Upload Image
+            <i className="bi bi-cloud-arrow-up me-2"></i> 
+            {/* 🟢 TRANSLATED */}
+            {t('btn_upload_image')}
         </button>
     );
 }
