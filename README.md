@@ -1,4 +1,4 @@
-# Course Project
+# Inventory Manager
 
 A full-stack web application for **inventory management**. Users can create inventories (templates) and add items to them. The app includes authentication (including social login), role-based access (user/admin), table-based views, custom fields (slot-based), custom item IDs, full-text search, discussions/comments, likes, tags, internationalization, and Cloudinary image upload.
 
