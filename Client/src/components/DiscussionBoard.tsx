@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
-import { useTranslation } from "react-i18next"; // 🟢 NEW
+import { useTranslation } from "react-i18next";
 import { fetchWithAuth } from "../utils/api";
 
 interface Comment {
@@ -16,7 +16,7 @@ interface Props {
 }
 
 export default function DiscussionBoard({ inventoryId }: Props) {
-    const { t } = useTranslation(); // 🟢 NEW
+    const { t } = useTranslation();
     const [comments, setComments] = useState<Comment[]>([]);
     const [newComment, setNewComment] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,7 +42,6 @@ export default function DiscussionBoard({ inventoryId }: Props) {
         }
     }, [inventoryId]);
 
-    // 🟢 RUBRIC REQUIREMENT: "Posts are updated automatically every several seconds"
     useEffect(() => {
         fetchComments(); // Initial fetch
         const interval = setInterval(() => {
@@ -75,7 +74,7 @@ export default function DiscussionBoard({ inventoryId }: Props) {
     };
 
     const handleDelete = async (commentId: number) => {
-        if (!window.confirm(t('confirm_delete_comment'))) return; // 🟢 TRANSLATED
+        if (!window.confirm(t('confirm_delete_comment'))) return;
         try {
             const res = await fetchWithAuth(`https://inventorymanager-c0d3cbfwfxd9dwd8.canadacentral-01.azurewebsites.net/api/inventories/${inventoryId}/comments/${commentId}`, {
                 method: "DELETE"
@@ -189,7 +188,6 @@ export default function DiscussionBoard({ inventoryId }: Props) {
                                         </div>
                                     ) : (
                                         <div className="markdown-content">
-                                            {/* 🟢 RUBRIC REQUIREMENT: "Every post displays Markdown text" */}
                                             <ReactMarkdown>{comment.text}</ReactMarkdown>
                                         </div>
                                     )}

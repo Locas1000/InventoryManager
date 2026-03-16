@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next'; // 🟢 NEW
+import { useTranslation } from 'react-i18next'; 
 
 interface Props {
     selectedTags: string[];
@@ -7,7 +7,7 @@ interface Props {
 }
 
 export default function TagInput({ selectedTags, onChange }: Props) {
-    const { t } = useTranslation(); // 🟢 NEW
+    const { t } = useTranslation(); 
     const [inputValue, setInputValue] = useState("");
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
@@ -77,7 +77,7 @@ export default function TagInput({ selectedTags, onChange }: Props) {
             <input
                 type="text"
                 className="form-control"
-                placeholder={t('placeholder_tags')} // 🟢 TRANSLATED
+                placeholder={t('placeholder_tags')} 
                 value={inputValue}
                 onChange={e => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}

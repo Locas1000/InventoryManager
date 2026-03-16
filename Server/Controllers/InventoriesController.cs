@@ -10,7 +10,7 @@ namespace Server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize] // <--- LOCKS DOWN THE CONTROLLER
+[Authorize]
 public class InventoriesController : ControllerBase
 {
     private readonly AppDbContext _context;
@@ -36,7 +36,7 @@ public class InventoriesController : ControllerBase
             .Select(i => new
             {
                 i.Id,
-                i.UserId, // 🟢 FIXED: The dashboard now receives the UserId!
+                i.UserId, 
                 CreatorName = i.User.Username,
                 ItemCount = i.Items.Count,
                 i.Title,
@@ -77,7 +77,6 @@ public class InventoriesController : ControllerBase
                 i.CustomIdTemplate,
                 i.ImageUrl,
                 
-                // 🟢 THIS IS THE CRITICAL LINE: It maps the fetched users into the JSON
                 AllowedUsers = i.AllowedUsers.Select(a => new { a.User.Id, a.User.Username, a.User.Email }),
                 
                 i.String1Name, i.String2Name, i.String3Name,
@@ -160,7 +159,6 @@ public class InventoriesController : ControllerBase
         
         if (inventory.UserId != currentUserId && currentUser.Role != "Admin") return Forbid();
 
-        // 🟢 FIXED: Map all the fields so auto-save works perfectly
         inventory.Title = dto.Title;
         inventory.Description = dto.Description;
         inventory.Category = dto.Category;
@@ -184,7 +182,7 @@ public class InventoriesController : ControllerBase
         await _context.SaveChangesAsync();
         return Ok(inventory);
     }
-    // 🟢 NEW: Grant Write Access
+    // Grant Write Access
     [HttpPost("{id}/access/{targetUserId}")]
     public async Task<IActionResult> GrantAccess(int id, int targetUserId)
     {
@@ -206,7 +204,7 @@ public class InventoriesController : ControllerBase
         return Ok();
     }
 
-    // 🟢 NEW: Revoke Write Access
+    // Revoke Write Access
     [HttpDelete("{id}/access/{targetUserId}")]
     public async Task<IActionResult> RevokeAccess(int id, int targetUserId)
     {
@@ -237,7 +235,6 @@ public class InventoriesController : ControllerBase
         int.TryParse(userIdClaim, out int currentUserId);
         var currentUser = await _context.Users.FindAsync(currentUserId);
 
-        // This perfectly satisfies the rubric requirement that admins act as creators!
         if (inventory.UserId != currentUserId && currentUser?.Role != "Admin") 
         {
             return Forbid();

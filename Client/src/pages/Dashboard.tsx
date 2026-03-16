@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next'; // 🟢 NEW: Import the translation hook
+import { useTranslation } from 'react-i18next';
 import TagCloud from "../components/TagCloud";
 import ReactMarkdown from 'react-markdown';
 interface Inventory {
@@ -17,7 +17,7 @@ export default function Dashboard() {
     const [inventories, setInventories] = useState<Inventory[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const navigate = useNavigate();
-    const { t } = useTranslation(); // 🟢 NEW: Initialize the hook
+    const { t } = useTranslation();
 
     const fetchInventories = useCallback(() => {
         setIsLoading(true);
@@ -46,7 +46,6 @@ export default function Dashboard() {
 
     return (
         <div className="container mt-5">
-            {/* 🟢 REPLACED: Text with t('key') */}
             <h1 className="mb-5 text-center fw-bold">{t('welcome_title')}</h1>
 
             <div className="row g-5">

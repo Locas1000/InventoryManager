@@ -17,7 +17,7 @@ public class UpdateItemDto
     public string? Text2Value { get; set; }
     public string? Text3Value { get; set; }
 
-    // 3. Numbers (Match the type you used in Item.cs, usually double? or decimal?)
+    // 3. Numbers
     public double? Number1Value { get; set; }
     public double? Number2Value { get; set; }
     public double? Number3Value { get; set; }

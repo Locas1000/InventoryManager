@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import type { DropResult } from '@hello-pangea/dnd';
 import ReactMarkdown from 'react-markdown';
-import { useTranslation } from 'react-i18next'; // 🟢 NEW
+import { useTranslation } from 'react-i18next'; 
 import AddItemModal from "../components/AddItemModal";
 import { fetchWithAuth } from "../utils/api";
 import EditItemModal from "../components/EditItemModal";
@@ -12,7 +12,7 @@ import DiscussionBoard from "../components/DiscussionBoard";
 
 export default function InventoryDetails() {
     const { id } = useParams();
-    const { t } = useTranslation(); // 🟢 NEW
+    const { t } = useTranslation();
     const [inventory, setInventory] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -88,7 +88,7 @@ export default function InventoryDetails() {
                 })
                     .then(res => {
                         if (res.status === 409) {
-                            alert(t('alert_conflict')); // 🟢 TRANSLATED
+                            alert(t('alert_conflict')); 
                             setIsDirty(false);
                         } else if (res.ok) {
                             setIsDirty(false);
@@ -157,7 +157,6 @@ export default function InventoryDetails() {
 
     const handleDeleteSelected = async () => {
         if (selectedItems.length === 0) return;
-        // 🟢 TRANSLATED (Using interpolation for the count)
         if (!window.confirm(t('confirm_delete_items', { count: selectedItems.length }))) return;
 
         try {
@@ -194,7 +193,6 @@ export default function InventoryDetails() {
     };
 
     if (isLoading) return <div className="text-center mt-5"><div className="spinner-border text-primary"></div></div>;
-    // 🟢 TRANSLATED
     if (!inventory) return <div className="text-center mt-5"><h3>{t('inv_not_found')}</h3><Link to="/">{t('go_home')}</Link></div>;
 
     const columns = getDynamicColumns();
@@ -209,7 +207,6 @@ return (
                 <div className="flex-grow-1">
                     <nav aria-label="breadcrumb">
                         <ol className="breadcrumb mb-1">
-                            {/* 🟢 TRANSLATED */}
                             <li className="breadcrumb-item"><Link to="/">{t('dashboard')}</Link></li>
                             <li className="breadcrumb-item active">{inventory.title}</li>
                         </ol>
@@ -218,16 +215,13 @@ return (
                         <h1 className="display-6 fw-bold mb-0">{inventory.title}</h1>
                         {isOwnerOrAdmin && (
                             <div className="text-end">
-                                {/* 🟢 TRANSLATED */}
                                 {isDirty ? <span className="badge bg-warning text-dark"><i className="bi bi-arrow-repeat spin"></i> {t('unsaved_changes')}</span>
                                     : <span className="badge bg-success"><i className="bi bi-cloud-check"></i> {t('saved')}</span>}
-                                {/* 🟢 TRANSLATED */}
                                 {lastSaved && <div className="text-muted" style={{fontSize: '0.8rem'}}>{t('last_autosave')} {lastSaved.toLocaleTimeString()}</div>}
                             </div>
                         )}
                     </div>
                     <div className="mt-2">
-                        {/* 🟢 TRANSLATED Badges, but kept category intact */}
                         <span className="badge bg-secondary me-2">{inventory.category}</span>
                         {inventory.isPublic ? <span className="badge bg-info text-dark">{t('public')}</span> : <span className="badge bg-dark">{t('private')}</span>}
                     </div>
@@ -241,7 +235,6 @@ return (
                 </div>
             </div>
             
-            {/* 🟢 TRANSLATED TABS */}
             <ul className="nav nav-tabs mb-4">
                 <li className="nav-item"><button className={`nav-link fw-bold ${activeTab === 'items' ? 'active' : ''}`} onClick={() => setActiveTab('items')}>{t('tab_items')}</button></li>
                 <li className="nav-item"><button className={`nav-link fw-bold ${activeTab === 'discussion' ? 'active' : ''}`} onClick={() => setActiveTab('discussion')}>{t('tab_discussion')}</button></li>
@@ -261,7 +254,6 @@ return (
                 <>
                     {hasWriteAccess && (
                         <div className="mb-3 p-2 bg-light border rounded d-flex gap-2">
-                            {/* 🟢 TRANSLATED BUTTONS */}
                             <button className="btn btn-primary" onClick={() => setShowAddItemModal(true)}>{t('btn_add_item')}</button>
                             <button className="btn btn-warning" disabled={selectedItems.length !== 1} onClick={() => setShowEditModal(true)}>{t('btn_edit_selected')}</button>
                             <button className="btn btn-danger" disabled={selectedItems.length === 0} onClick={handleDeleteSelected}>{t('btn_delete_selected')}</button>
@@ -276,7 +268,6 @@ return (
                                     <tr>
                                         <th style={{ width: '50px' }} className="text-center">☑</th>
                                         {columns.map(col => <th key={col.key}>{col.label}</th>)}
-                                        {/* 🟢 TRANSLATED HEADER */}
                                         <th>{t('th_likes')}</th>
                                     </tr>
                                     </thead>
@@ -330,7 +321,6 @@ return (
                 <div className="row">
                     <div className="col-md-8">
                         <div className="card shadow-sm border-0 p-4">
-                            {/* 🟢 TRANSLATED SETTINGS */}
                             <h4 className="mb-4">{t('settings_general')}</h4>
                             <div className="mb-3">
                                 <label className="form-label fw-bold">{t('settings_title')}</label>
@@ -355,7 +345,6 @@ return (
                 <div className="row">
                     <div className="col-md-8">
                         <div className="card shadow-sm border-0 p-4">
-                            {/* 🟢 TRANSLATED FIELDS UI */}
                             <h4 className="mb-4">{t('fields_manage')}</h4>
                             <p className="text-muted">{t('fields_help')}</p>
 
@@ -411,7 +400,6 @@ return (
                 <div className="row">
                     <div className="col-md-6">
                         <div className="card shadow-sm border-0 p-4 mb-4">
-                            {/* 🟢 TRANSLATED ACCESS UI */}
                             <h4 className="mb-3">{t('access_visibility')}</h4>
                             <div className="form-check form-switch fs-5">
                                 <input className="form-check-input" type="checkbox" name="isPublic" checked={formData.isPublic || false} onChange={handleFormChange} />
@@ -460,7 +448,6 @@ return (
             {/* TAB 6: STATISTICS (Owner/Admin Only) */}
             {activeTab === 'stats' && isOwnerOrAdmin && (
                 <div className="card shadow-sm border-0 p-4">
-                    {/* 🟢 TRANSLATED STATS UI */}
                     <h4 className="mb-4">{t('stats_title')}</h4>
                     <div className="row text-center">
                         <div className="col-md-4 mb-3">

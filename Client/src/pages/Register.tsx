@@ -1,10 +1,10 @@
 // src/pages/Register.tsx
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useTranslation } from 'react-i18next'; // 🟢 NEW
+import { useTranslation } from 'react-i18next';
 
 export default function Register() {
-    const { t } = useTranslation(); // 🟢 NEW
+    const { t } = useTranslation(); 
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -19,7 +19,7 @@ export default function Register() {
         setError(null);
 
         if (password !== confirmPassword) {
-            setError(t('err_passwords_match')); // 🟢 TRANSLATED
+            setError(t('err_passwords_match'));
             return;
         }
 
@@ -35,11 +35,11 @@ export default function Register() {
 
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(errorText || t('err_register_failed')); // 🟢 TRANSLATED Fallback
+                throw new Error(errorText || t('err_register_failed')); 
             }
 
             // Success! Send them to the login page
-            alert(t('msg_register_success')); // 🟢 TRANSLATED
+            alert(t('msg_register_success')); 
             navigate('/login');
 
         } catch (err: any) {

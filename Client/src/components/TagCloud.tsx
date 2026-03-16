@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next'; // 🟢 NEW
+import { useTranslation } from 'react-i18next'; 
 
 interface TagData {
     name: string;
@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default function TagCloud({ selectedTag, onSelectTag }: Props) {
-    const { t } = useTranslation(); // 🟢 NEW
+    const { t } = useTranslation();
     const [tags, setTags] = useState<TagData[]>([]);
 
     useEffect(() => {
@@ -26,10 +26,8 @@ export default function TagCloud({ selectedTag, onSelectTag }: Props) {
     if (tags.length === 0) return null; 
 
     return (
-        /* 🟢 Removed bg-light for Dark Mode compatibility */
         <div className="mb-4 p-4 rounded shadow-sm border">
             <h5 className="fw-bold mb-3 text-secondary">
-                {/* 🟢 TRANSLATED */}
                 <i className="bi bi-tags-fill me-2 text-primary"></i> {t('filter_by_tag')}
             </h5>
             <div className="d-flex flex-wrap gap-2">
@@ -38,7 +36,6 @@ export default function TagCloud({ selectedTag, onSelectTag }: Props) {
                     className={`btn btn-sm rounded-pill px-3 ${!selectedTag ? 'btn-primary' : 'btn-outline-secondary'}`}
                     onClick={() => onSelectTag(null)}
                 >
-                    {/* 🟢 TRANSLATED */}
                     {t('all_inventories')}
                 </button>
 

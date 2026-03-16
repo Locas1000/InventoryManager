@@ -12,7 +12,6 @@ export default function Navbar() {
     const currentUser = userString ? JSON.parse(userString) : null;
     const isAdmin = currentUser?.role === "Admin" || currentUser?.Role === "Admin";
 
-    // 🟢 PHASE 5: Theme Initialization & Toggle
     useEffect(() => {
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'dark') {
@@ -33,7 +32,6 @@ export default function Navbar() {
         }
     };
 
-    // 🟢 PHASE 5: Language Toggle
     const toggleLanguage = () => {
         const newLang = i18n.language === 'en' ? 'es' : 'en';
         i18n.changeLanguage(newLang);
@@ -88,7 +86,6 @@ export default function Navbar() {
                         </div>
                     </form>
 
-                    {/* 🟢 PHASE 5: Quick-Win Polish Buttons */}
                     <button className="btn btn-outline-light btn-sm me-2 fw-bold" onClick={toggleLanguage} title="Toggle Language">
                         {i18n.language === 'en' ? 'ES' : 'EN'}
                     </button>

@@ -29,13 +29,13 @@ public class SearchController : ControllerBase
 
         var searchTerm = q.ToLower();
 
-        // 🟢 1. Search Inventories (Checking Title, Description, Category, AND Tags)
+        // Search Inventories
         var inventories = await _context.Inventories
             .Include(i => i.Tags) // Ensure EF Core knows about the Tags table for this query
             .Where(i => i.Title.ToLower().Contains(searchTerm) || 
                         i.Description.ToLower().Contains(searchTerm) || 
                         i.Category.ToLower().Contains(searchTerm) ||
-                        i.Tags.Any(t => t.Name.ToLower().Contains(searchTerm))) // 🟢 NEW: Tag Search Logic
+                        i.Tags.Any(t => t.Name.ToLower().Contains(searchTerm))) //  Tag Search Logic
             .Select(i => new 
             {
                 i.Id,
@@ -47,7 +47,7 @@ public class SearchController : ControllerBase
             .Take(10) // Limit to top 10 results so we don't overload the frontend
             .ToListAsync();
 
-        // 🟢 2. Search Items (Checking Name, CustomId, and the first dynamic string field)
+        //  Search Items 
         var items = await _context.Items
             .Include(i => i.Inventory) // Bring in the inventory so we know where this item lives
             .Where(i => i.Name.ToLower().Contains(searchTerm) || 

@@ -42,7 +42,7 @@ public class AuthController : ControllerBase
             return BadRequest("User already exists.");
         }
 
-        // 2. Hash the password (NEVER store plain text!)
+        // 2. Hash the password 
         string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
         // 3. Create the User
@@ -86,7 +86,7 @@ public class AuthController : ControllerBase
         // 3. Create the JWT Token
         string token = CreateToken(user);
 
-        // Return the token and the user info (so frontend knows who logged in)
+        // Return the token and the user info 
         return Ok(new { token, username = user.Username, userId = user.Id,role = user.Role });
     }
 
@@ -206,7 +206,7 @@ public class GithubAuthDto
         };
 
         // Ideally, store this key in appsettings.json! 
-        // For now, we use a hardcoded key for the prototype (Must be at least 16 chars).
+        // For now, we use a hardcoded key
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("MySuperSecretKeyForSentinelApp123!")); 
 
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature);

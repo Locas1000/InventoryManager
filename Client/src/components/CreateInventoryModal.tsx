@@ -3,7 +3,7 @@ import { fetchWithAuth } from "../utils/api";
 import CustomIdBuilder from "./CustomIdBuilder";
 import ImageUpload from "./ImageUpload";
 import TagInput from "./TagInput";
-import { useTranslation } from "react-i18next"; // 🟢 NEW
+import { useTranslation } from "react-i18next";
 
 interface Props {
     show: boolean;
@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default function CreateInventoryModal({ show, onClose, onSuccess }: Props) {
-    const { t } = useTranslation(); // 🟢 NEW
+    const { t } = useTranslation();
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [category, setCategory] = useState("Equipment");
@@ -68,7 +68,7 @@ export default function CreateInventoryModal({ show, onClose, onSuccess }: Props
                 onSuccess();
                 onClose();
             } else {
-                alert(t('alert_fail_create_inv')); // 🟢 TRANSLATED
+                alert(t('alert_fail_create_inv')); 
             }
         } catch (error) {
             console.error("Error:", error);
@@ -86,7 +86,6 @@ export default function CreateInventoryModal({ show, onClose, onSuccess }: Props
         <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', overflowY: 'auto' }}>
             <div className="modal-dialog modal-xl">
                 <div className="modal-content">
-                    {/* 🟢 Removed bg-light */}
                     <div className="modal-header">
                         <h5 className="modal-title fw-bold">{t('modal_build_inv_title')}</h5>
                         <button type="button" className="btn-close" onClick={onClose}></button>
@@ -104,7 +103,6 @@ export default function CreateInventoryModal({ show, onClose, onSuccess }: Props
                                 <div className="col-md-6">
                                     <label className="form-label fw-bold">{t('label_category')}</label>
                                     <select className="form-select" value={category} onChange={e => setCategory(e.target.value)}>
-                                        {/* 🟢 TRANSLATED labels, but explicit English values for the DB! */}
                                         <option value="Equipment">{t('cat_equipment')}</option>
                                         <option value="Software Licenses">{t('cat_software')}</option>
                                         <option value="Office Supplies">{t('cat_office')}</option>
@@ -166,7 +164,6 @@ export default function CreateInventoryModal({ show, onClose, onSuccess }: Props
                                                value={customFields.string3Name} onChange={e => handleFieldChange('string3Name', e.target.value)} />
                                     </div>
 
-                                    {/* 🟢 FIXED: Kept the closing div at the bottom so inputs stay in the column */}
                                     <div className="col-md-3">
                                         <h6 className="text-primary text-center border-bottom pb-1">{t('fields_numbers')}</h6>
                                         <input type="text" className="form-control form-control-sm mb-1" placeholder={t('ph_weight')} 
@@ -201,7 +198,6 @@ export default function CreateInventoryModal({ show, onClose, onSuccess }: Props
                         </form>
                     </div>
                     
-                    {/* 🟢 Removed bg-light */}
                     <div className="modal-footer">
                         <button type="button" className="btn btn-secondary" onClick={onClose}>{t('btn_cancel')}</button>
                         <button type="submit" form="create-form" className="btn btn-primary px-4" disabled={isSubmitting}>

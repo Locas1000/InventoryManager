@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { fetchWithAuth } from "../utils/api";
-import { useTranslation } from "react-i18next"; // 🟢 NEW
+import { useTranslation } from "react-i18next"; 
 
 interface Props {
     show: boolean;
@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default function EditItemModal({ show, onClose, onSuccess, inventory, item }: Props) {
-    const { t } = useTranslation(); // 🟢 NEW
+    const { t } = useTranslation(); 
     const [name, setName] = useState("");
     const [customId, setCustomId] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -94,7 +94,6 @@ export default function EditItemModal({ show, onClose, onSuccess, inventory, ite
         <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', overflowY: 'auto' }}>
             <div className="modal-dialog modal-lg">
                 <div className="modal-content">
-                    {/* 🟢 Removed bg-warning-subtle for Dark Mode compatibility */}
                     <div className="modal-header">
                         <h5 className="modal-title fw-bold">{t('edit_item_title')} {item.name}</h5>
                         <button type="button" className="btn-close" onClick={onClose}></button>
@@ -218,7 +217,6 @@ export default function EditItemModal({ show, onClose, onSuccess, inventory, ite
                         </form>
                     </div>
 
-                    {/* 🟢 Removed bg-light */}
                     <div className="modal-footer">
                         <button type="button" className="btn btn-secondary" onClick={onClose}>{t('btn_cancel')}</button>
                         <button type="submit" form="edit-item-form" className="btn btn-warning px-4" disabled={isSubmitting}>

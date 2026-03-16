@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
 import { fetchWithAuth } from '../utils/api';
-import { useTranslation } from 'react-i18next'; // 🟢 NEW
+import { useTranslation } from 'react-i18next'; 
 
 interface Inventory {
     id: string;
@@ -19,12 +19,12 @@ interface EditInventoryModalProps {
 }
 
 export default function EditInventoryModal({ show, onClose, onSuccess, inventory }: EditInventoryModalProps) {
-    const { t } = useTranslation(); // 🟢 NEW
+    const { t } = useTranslation();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [category, setCategory] = useState('');
     const [customIdTemplate, setCustomIdTemplate] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false); // 🟢 NEW
+    const [isSubmitting, setIsSubmitting] = useState(false); 
 
     useEffect(() => {
         if (inventory) {
@@ -56,7 +56,7 @@ export default function EditInventoryModal({ show, onClose, onSuccess, inventory
                 onSuccess();
                 onClose();
             } else {
-                alert(t('alert_fail_update_inv')); // 🟢 TRANSLATED
+                alert(t('alert_fail_update_inv'));
             }
         } catch (error) {
             console.error('Error updating inventory:', error);
@@ -69,7 +69,6 @@ export default function EditInventoryModal({ show, onClose, onSuccess, inventory
     return (
         <Modal show={show} onHide={onClose} centered>
             <Modal.Header closeButton>
-                {/* 🟢 TRANSLATED */}
                 <Modal.Title className="fw-bold">{t('edit_inventory_title')}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
@@ -94,7 +93,6 @@ export default function EditInventoryModal({ show, onClose, onSuccess, inventory
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-bold">{t('label_category')}</Form.Label>
-                        {/* 🟢 Updated to match Create logic for DB consistency */}
                         <Form.Select value={category} onChange={(e) => setCategory(e.target.value)}>
                             <option value="Equipment">{t('cat_equipment')}</option>
                             <option value="Software Licenses">{t('cat_software')}</option>
@@ -114,7 +112,6 @@ export default function EditInventoryModal({ show, onClose, onSuccess, inventory
                     </Form.Group>
                     <div className="d-grid">
                         <Button variant="primary" type="submit" disabled={isSubmitting}>
-                            {/* 🟢 TRANSLATED */}
                             {isSubmitting ? t('btn_updating') : t('btn_save_changes')}
                         </Button>
                     </div>

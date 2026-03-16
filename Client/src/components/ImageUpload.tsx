@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next'; // 🟢 NEW
+import { useTranslation } from 'react-i18next'; 
 
 declare global {
     interface Window {
@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default function ImageUpload({ onUploadSuccess }: Props) {
-    const { t } = useTranslation(); // 🟢 NEW
+    const { t } = useTranslation(); 
     const cloudinaryRef = useRef<any>();
     const widgetRef = useRef<any>();
 
@@ -46,7 +46,6 @@ export default function ImageUpload({ onUploadSuccess }: Props) {
             onClick={() => widgetRef.current?.open()}
         >
             <i className="bi bi-cloud-arrow-up me-2"></i> 
-            {/* 🟢 TRANSLATED */}
             {t('btn_upload_image')}
         </button>
     );

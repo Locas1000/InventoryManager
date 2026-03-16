@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
-import { useTranslation } from 'react-i18next'; // 🟢 NEW
+import { useTranslation } from 'react-i18next'; 
 
 // We moved the definition inside the component or updated labels dynamically
 interface CustomIdBuilderProps {
@@ -9,9 +9,8 @@ interface CustomIdBuilderProps {
 }
 
 export default function CustomIdBuilder({ initialTemplate, onTemplateChange }: CustomIdBuilderProps) {
-    const { t } = useTranslation(); // 🟢 NEW
+    const { t } = useTranslation(); 
 
-    // 🟢 UPDATED: Mapping labels to translation keys
     const AVAILABLE_ELEMENTS = [
         { id: 'fixed', label: t('el_fixed'), type: 'FIXED:', defaultVal: 'INV-' },
         { id: 'date', label: t('el_date'), type: 'DATE:', defaultVal: 'yyyyMMdd' },
@@ -112,7 +111,6 @@ export default function CustomIdBuilder({ initialTemplate, onTemplateChange }: C
         <DragDropContext onDragEnd={onDragEnd}>
             <div className="row mt-3 mb-4">
                 <div className="col-md-4">
-                    {/* 🟢 TRANSLATED */}
                     <h6 className="text-secondary">{t('available_elements')}</h6>
                     <Droppable droppableId="pool-zone" isDropDisabled={true}>
                         {(provided) => (
@@ -140,9 +138,7 @@ export default function CustomIdBuilder({ initialTemplate, onTemplateChange }: C
 
                 <div className="col-md-8">
                     <div className="d-flex justify-content-between align-items-center mb-2">
-                        {/* 🟢 TRANSLATED */}
                         <h6 className="text-secondary mb-0">{t('active_format')}</h6>
-                        {/* 🟢 TRANSLATED (title prop) */}
                         <span className="badge bg-info text-dark" title={t('id_builder_help')}>? Help</span>
                     </div>
                     
@@ -154,7 +150,6 @@ export default function CustomIdBuilder({ initialTemplate, onTemplateChange }: C
                                 className={`p-3 border rounded d-flex flex-wrap gap-2 ${snapshot.isDraggingOver ? 'bg-light border-primary' : 'bg-white'}`}
                                 style={{ minHeight: '80px' }}
                             >
-                                {/* 🟢 TRANSLATED */}
                                 {activeBlocks.length === 0 && <span className="text-muted mt-1">{t('id_builder_placeholder')}</span>}
                                 
                                 {activeBlocks.map((block, index) => (
@@ -188,7 +183,6 @@ export default function CustomIdBuilder({ initialTemplate, onTemplateChange }: C
                     </Droppable>
 
                     <div className="mt-3 p-3 bg-light border rounded">
-                        {/* 🟢 TRANSLATED */}
                         <strong className="text-secondary">{t('live_preview')} </strong>
                         <span className="fs-5 text-primary fw-bold ms-2">
                             {generatePreview() || '---'}

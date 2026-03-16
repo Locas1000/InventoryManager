@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { fetchWithAuth } from "../utils/api";
 import ImageUpload from "./ImageUpload";
-import { useTranslation } from "react-i18next"; // 🟢 NEW
+import { useTranslation } from "react-i18next";
 
 interface Props {
     show: boolean;
@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default function AddItemModal({ show, onClose, onSuccess, inventory }: Props) {
-    const { t } = useTranslation(); // 🟢 NEW
+    const { t } = useTranslation();
     const [name, setName] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -62,7 +62,7 @@ export default function AddItemModal({ show, onClose, onSuccess, inventory }: Pr
                 onClose();
             } else {
                 const errorData = await response.json();
-                alert(errorData.message || t('alert_fail_create_item')); // 🟢 TRANSLATED FALLBACK
+                alert(errorData.message || t('alert_fail_create_item'));
             }
         } catch (error) {
             console.error("Error:", error);
@@ -86,7 +86,6 @@ export default function AddItemModal({ show, onClose, onSuccess, inventory }: Pr
         <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', overflowY: 'auto' }}>
             <div className="modal-dialog modal-lg">
                 <div className="modal-content">
-                    {/* 🟢 Removed bg-light for Dark Mode compatibility */}
                     <div className="modal-header">
                         <h5 className="modal-title fw-bold">{t('add_item_to')} {inventory.title}</h5>
                         <button type="button" className="btn-close" onClick={onClose}></button>
@@ -215,7 +214,6 @@ export default function AddItemModal({ show, onClose, onSuccess, inventory }: Pr
                         </form>
                     </div>
                     
-                    {/* 🟢 Removed bg-light */}
                     <div className="modal-footer mt-4">
                         <button type="button" className="btn btn-secondary" onClick={onClose}>{t('btn_cancel')}</button>
                         <button type="submit" form="add-item-form" className="btn btn-success px-4" disabled={isSubmitting}>

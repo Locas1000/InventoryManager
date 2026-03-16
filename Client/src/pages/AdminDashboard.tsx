@@ -1,8 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { fetchWithAuth } from "../utils/api";
 import { Link, useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next"; // 🟢 NEW
-
+import { useTranslation } from "react-i18next"; 
 interface AdminStats {
     totalUsers: number;
     totalInventories: number;
@@ -31,7 +30,7 @@ interface Inventory {
 }
 
 export default function AdminDashboard() {
-    const { t } = useTranslation(); // 🟢 NEW
+    const { t } = useTranslation();
     const [data, setData] = useState<AdminData | null>(null);
     const [inventories, setInventories] = useState<Inventory[]>([]); 
     
@@ -82,7 +81,7 @@ export default function AdminDashboard() {
 
     const handleBulkRoleToggle = async () => {
         if (selectedUsers.length !== 1) {
-            alert(t('alert_select_one_user')); // 🟢 TRANSLATED
+            alert(t('alert_select_one_user')); 
             return;
         }
         const targetId = selectedUsers[0];
@@ -92,9 +91,9 @@ export default function AdminDashboard() {
         const newRole = targetUser.role === "Admin" ? "User" : "Admin";
 
         if (targetId === currentUserId && newRole === "User") {
-            if (!window.confirm(t('alert_revoke_own_admin'))) return; // 🟢 TRANSLATED
+            if (!window.confirm(t('alert_revoke_own_admin'))) return;
         } else if (newRole === "Admin") {
-            if (!window.confirm(t('alert_promote_admin'))) return; // 🟢 TRANSLATED
+            if (!window.confirm(t('alert_promote_admin'))) return;
         }
 
         try {
@@ -114,7 +113,7 @@ export default function AdminDashboard() {
                     loadData(); 
                 }
             } else {
-                alert(t('alert_fail_update_role')); // 🟢 TRANSLATED
+                alert(t('alert_fail_update_role'));
             }
         } catch (err) {
             console.error(err);
@@ -123,7 +122,7 @@ export default function AdminDashboard() {
 
     const handleBulkToggleBlock = async () => {
         if (selectedUsers.includes(currentUserId)) {
-            alert(t('alert_cannot_block_self')); // 🟢 TRANSLATED
+            alert(t('alert_cannot_block_self')); 
             return;
         }
 
@@ -134,17 +133,17 @@ export default function AdminDashboard() {
             loadData();
         } catch (err) {
             console.error(err);
-            alert(t('alert_fail_toggle_block')); // 🟢 TRANSLATED
+            alert(t('alert_fail_toggle_block')); 
         }
     };
 
     const handleBulkDeleteUsers = async () => {
         if (selectedUsers.includes(currentUserId)) {
-            alert(t('alert_cannot_delete_self')); // 🟢 TRANSLATED
+            alert(t('alert_cannot_delete_self'));
             return;
         }
 
-        if (!window.confirm(t('confirm_delete_users', { count: selectedUsers.length }))) return; // 🟢 TRANSLATED
+        if (!window.confirm(t('confirm_delete_users', { count: selectedUsers.length }))) return;
 
         try {
             for (const targetId of selectedUsers) {
@@ -153,7 +152,7 @@ export default function AdminDashboard() {
             loadData();
         } catch (err) {
             console.error(err);
-            alert(t('alert_fail_delete_users')); // 🟢 TRANSLATED
+            alert(t('alert_fail_delete_users')); 
         }
     };
 
@@ -163,7 +162,7 @@ export default function AdminDashboard() {
     };
 
     const handleBulkDeleteInventories = async () => {
-        if (!window.confirm(t('confirm_delete_global_invs', { count: selectedInventories.length }))) return; // 🟢 TRANSLATED
+        if (!window.confirm(t('confirm_delete_global_invs', { count: selectedInventories.length }))) return;
 
         try {
             for (const targetId of selectedInventories) {
@@ -172,22 +171,18 @@ export default function AdminDashboard() {
             loadData(); // Refreshes both tables and the stats
         } catch (err) {
             console.error(err);
-            alert(t('alert_fail_delete_invs')); // 🟢 TRANSLATED
+            alert(t('alert_fail_delete_invs')); 
         }
     };
 
 
     if (isLoading) return <div className="container mt-5 text-center"><div className="spinner-border text-primary" role="status"></div></div>;
-    // 🟢 TRANSLATED Fallback link text
     if (error) return <div className="container mt-5"><div className="alert alert-danger text-center"><p className="lead">{error}</p><Link to="/" className="btn btn-outline-danger mt-3">{t('return_dashboard')}</Link></div></div>;
 
     return (
         <div className="container mt-5 mb-5">
             <h2 className="fw-bold mb-4">{t('admin_control_panel')}</h2>
             
-            {/* ======================= */}
-            {/* SECTION 1: MANAGE USERS */}
-            {/* ======================= */}
             <h4 className="mb-3 text-secondary border-bottom pb-2">{t('manage_users')}</h4>
             
             <div className="mb-3 d-flex gap-2 p-2 bg-light border rounded">

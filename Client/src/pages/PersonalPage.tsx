@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next'; // 🟢 NEW
+import { useTranslation } from 'react-i18next'; 
 import CreateInventoryModal from '../components/CreateInventoryModal';
 import EditInventoryModal from '../components/EditInventoryModal';
 import { fetchWithAuth } from "../utils/api";
@@ -15,7 +15,7 @@ interface Inventory {
 }
 
 export default function PersonalPage() {
-    const { t } = useTranslation(); // 🟢 NEW
+    const { t } = useTranslation();
     const [inventories, setInventories] = useState<Inventory[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -55,7 +55,6 @@ export default function PersonalPage() {
     };
 
     const handleDelete = async (idList: number[]) => {
-        // 🟢 TRANSLATED (Using interpolation for the count)
         if (!window.confirm(t('confirm_delete_inventories', { count: idList.length }))) return;
         try {
             for (const id of idList) {
@@ -81,7 +80,6 @@ export default function PersonalPage() {
     return (
         <div className="container mt-5">
             <div className="d-flex justify-content-between align-items-center mb-4">
-                {/* 🟢 TRANSLATED */}
                 <h1>{t('my_profile')}</h1>
                 <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>{t('btn_new_inventory')}</button>
             </div>
@@ -89,7 +87,7 @@ export default function PersonalPage() {
             <input
                 type="text"
                 className="form-control mb-4"
-                placeholder={t('filter_placeholder')} // 🟢 TRANSLATED
+                placeholder={t('filter_placeholder')}
                 value={filterText}
                 onChange={e => setFilterText(e.target.value)}
             />
@@ -106,7 +104,6 @@ export default function PersonalPage() {
                     <thead className="table-dark">
                     <tr>
                         <th style={{width: '50px'}} className="text-center">☑</th>
-                        {/* 🟢 TRANSLATED HEADERS */}
                         <th>{t('table_id')}</th>
                         <th>{t('table_title')}</th>
                         <th>{t('table_category')}</th>
@@ -137,7 +134,6 @@ export default function PersonalPage() {
                 <table className="table table-bordered table-hover">
                     <thead className="table-light">
                     <tr>
-                        {/* 🟢 TRANSLATED HEADERS */}
                         <th>{t('table_id')}</th>
                         <th>{t('table_title')}</th>
                         <th>{t('table_category')}</th>

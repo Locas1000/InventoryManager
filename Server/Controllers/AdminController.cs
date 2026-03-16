@@ -43,7 +43,7 @@ public class AdminController : ControllerBase
                 u.Username,
                 u.Email,
                 u.Role,
-                u.IsBlocked, // 🟢 PHASE 2: Send block status to frontend
+                u.IsBlocked,
                 InventoryCount = u.Inventories.Count
             })
             .OrderBy(u => u.Id)
@@ -74,7 +74,6 @@ public class AdminController : ControllerBase
         return Ok();
     }
 
-    // 🟢 PHASE 2: Toggle Block Status
     [HttpPut("users/{id}/toggle-block")]
     public async Task<IActionResult> ToggleBlockUser(int id)
     {

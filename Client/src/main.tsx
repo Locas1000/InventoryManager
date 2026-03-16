@@ -5,7 +5,6 @@ import './index.css';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { BrowserRouter } from 'react-router-dom';
 import 'bootstrap-icons/font/bootstrap-icons.css'; 
-// 🟢 PHASE 5: Import the i18n configuration
 import './i18n'; 
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';

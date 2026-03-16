@@ -14,7 +14,6 @@ export default function Login() {
 
     const navigate = useNavigate();
 
-    // 🟢 HELPER: Centralized login logic to handle blocked status
     const processLoginResponse = (data: any) => {
         if (data.isBlocked) {
             setError(t('err_user_blocked'));

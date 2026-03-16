@@ -10,9 +10,8 @@ public class CreateItemDto
     [Required]
     public int InventoryId { get; set; }
 
-    // ==========================================
+    
     // CUSTOM FIELD VALUES (Optional Data)
-    // ==========================================
 
     // Strings
     public string? String1Value { get; set; }

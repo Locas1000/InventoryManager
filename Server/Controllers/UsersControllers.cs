@@ -30,7 +30,7 @@ public class UsersController : ControllerBase
         return CreatedAtAction(nameof(GetUsers), new { id = user.Id }, user);
     }
 
-    // 🟢 PHASE 2: Autocomplete Search Endpoint
+    // PHASE 2: Autocomplete Search Endpoint
     [HttpGet("search")]
     [Authorize] // Only logged-in users can search for others
     public async Task<IActionResult> SearchUsers([FromQuery] string query)

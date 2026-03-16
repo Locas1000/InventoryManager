@@ -8,11 +8,9 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ==========================================
-// 1. REGISTER SERVICES (Before Build)
-// ==========================================
+//start services
 
-// Database Context
+// Database conection 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -34,17 +32,13 @@ builder.Services.AddCors(options =>
 // Controllers & JSON Options
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
-    // This prevents the infinite loop when returning database models
+    // This prevents infinite loop 
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
 
 // Swagger / OpenAPI
 builder.Services.AddEndpointsApiExplorer();
-// 1. Add this using statement at the very top if missing:
 
-// ... inside the builder section ...
-
-// 2. Replace the old AddSwaggerGen() with this:
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Inventory API", Version = "v1" });
@@ -91,10 +85,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = false
         };
     });
-
-// ==========================================
-// 2. BUILD THE APP
-// ==========================================
+// AUTOMATIC DATABASE MIGRATIONS
+//create a "Scope" to run our database updates
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -111,10 +103,8 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"An error occurred during migration: {ex.Message}");
     }
 }
-// ==========================================
-// 3. CONFIGURE PIPELINE (Middleware)
-// ==========================================
 
+// Only show the Swagger UI if we are in development mode (not production).
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -124,7 +114,6 @@ app.UseCors("AllowVite");
 
 app.UseHttpsRedirection();
 
-// IMPORTANT: Authentication must come BEFORE Authorization
 app.UseAuthentication(); 
 app.UseAuthorization();
 

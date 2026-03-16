@@ -1,4 +1,3 @@
-/* 🟢 GLOBAL DARK MODE OVERRIDES */
 body[data-theme='dark'] {
     background-color: #121212 !important;
     color: #e0e0e0 !important;
@@ -56,7 +55,6 @@ body[data-theme='dark'] .form-control:focus {
     border-color: #6ea8fe !important; /* Lighter primary blue */
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
 }
-/* 🟢 Fix Bootstrap Modals in Dark Mode */
 body[data-theme='dark'] .modal-content,
 body[data-theme='dark'] .modal-header,
 body[data-theme='dark'] .modal-footer {

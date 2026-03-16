@@ -30,7 +30,7 @@ public class ItemsController : ControllerBase
 
         var inventory = await _context.Inventories.FindAsync(item.InventoryId);
         
-        // 🟢 PHASE 2: Master Write-Access Check
+        // Master Write-Access Check
         var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
         int.TryParse(currentUserIdStr, out int currentUserId);
         var currentUser = await _context.Users.FindAsync(currentUserId);
@@ -73,7 +73,6 @@ public class ItemsController : ControllerBase
     public async Task<IActionResult> ToggleLike(int itemId)
     {
         // 1. Extract the UserId from the JWT Token
-        // Note: Make sure ClaimTypes.NameIdentifier matches how you generate your JWT in AuthController!
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
         {
@@ -113,7 +112,7 @@ public class ItemsController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        // 4. Return the updated status and the new total count to keep the frontend in sync
+        // Return the updated status and the new total count to keep the frontend in sync
         var totalLikes = await _context.ItemLikes.CountAsync(il => il.ItemId == itemId);
 
         return Ok(new { isLiked = isLiked, totalLikes = totalLikes });
@@ -128,13 +127,13 @@ public class ItemsController : ControllerBase
     }
     
    [HttpPost]
-    [Authorize] // 🟢 Phase 2: Must be logged in to create items
+    [Authorize] //  Must be logged in to create items
     public async Task<ActionResult<Item>> CreateItem(CreateItemDto dto)
     {
         var inventory = await _context.Inventories.FindAsync(dto.InventoryId);
         if (inventory == null) return NotFound("Inventory not found.");
 
-        // 🟢 PHASE 2: Master Write-Access Check
+        //  Master Write-Access Check
         var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
         int.TryParse(currentUserIdStr, out int currentUserId);
         var currentUser = await _context.Users.FindAsync(currentUserId);
@@ -185,7 +184,7 @@ public class ItemsController : ControllerBase
     }
 
 [HttpDelete("{id}")]
-    [Authorize] // 🟢 Phase 2: Added Authorize
+    [Authorize]
     public async Task<IActionResult> DeleteItem(int id)
     {
         var item = await _context.Items.FindAsync(id);
@@ -193,7 +192,7 @@ public class ItemsController : ControllerBase
 
         var inventory = await _context.Inventories.FindAsync(item.InventoryId);
     
-        // 🟢 PHASE 2: Master Write-Access Check
+        //Master Write-Access Check
         var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
         int.TryParse(currentUserIdStr, out int currentUserId);
         var currentUser = await _context.Users.FindAsync(currentUserId);
