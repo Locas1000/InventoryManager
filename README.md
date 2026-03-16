@@ -1,54 +1,94 @@
-# Sentinel Custom Inventory Management System
+# Course Project
 
-A full-stack web application built for managing arbitrary inventories. This project allows users to create custom item templates with dynamic fields and rule-based custom ID generators.
+A full-stack web application for **inventory management**. Users can create inventories (templates) and add items to them. The app includes authentication (including social login), role-based access (user/admin), table-based views, custom fields (slot-based), custom item IDs, full-text search, discussions/comments, likes, tags, internationalization, and Cloudinary image upload.
 
-## 🛠 Tech Stack
+---
 
-* **Frontend:** React, TypeScript, Vite, Bootstrap 5
-* **Backend:** C# .NET 8 Web API
-* **Database:** PostgreSQL
-* **ORM:** Entity Framework Core 8
-* **Security:** JWT (JSON Web Tokens) & BCrypt Password Hashing
+## Tech Stack
 
-##  Core Features
+- **Frontend:** React, TypeScript, Vite, Bootstrap 5
+- **Backend:** C# .NET 8 Web API
+- **Database:** PostgreSQL
+- **ORM:** Entity Framework Core 8
+- **Auth/Security:** JWT + BCrypt password hashing
 
-* **Authentication & Authorization:** Secure JWT-based login and registration. Role-based access control grants read-only access for guests, write-access for assigned users, and full override access for Admins.
-* **Dynamic Custom Fields (Killer Feature 1):** Inventory creators can define custom schemas for their items, supporting up to 3 fields of each type: Single-line text, Multi-line text, Numeric, Checkboxes, and Document/Image links.
-* **Custom ID Generator (Killer Feature 2):** Users can build a drag-and-drop formula (e.g., `FIXED-DATE-SEQ`) to automatically generate unique IDs for their items. Uniqueness is enforced at the database level per inventory.
-* **Real-time Collaboration:** Optimistic concurrency locking prevents data loss when multiple users or admins edit the same inventory or item simultaneously.
-* **Full-Text Search:** Global search functionality accessible from the top navigation bar to quickly find inventories and items.
-* **Theming & Localization:** Full support for Light and Dark modes, along with Internationalization (i18n) for multiple UI languages.
-* **Rich Text & Tags:** Markdown support for inventory descriptions and comments, alongside a robust tagging system with database-driven autocompletion.
+---
 
-##  Local Development Setup
+## Implemented Features (Current Repo)
+
+### Authentication
+- Local registration and login (JWT)
+- Social login:
+  - Google login
+  - GitHub login
+
+### Roles & Access
+- Role stored per user (`User` / `Admin`)
+- Admin-only area guarded in the frontend (`/admin`)
+
+### Admin Dashboard
+Admin UI + API support for:
+- Viewing stats (users / inventories / items)
+- Viewing users list
+- Blocking / unblocking users
+- Deleting users
+- Toggling admin role (including allowing an admin to revoke their own admin role)
+
+### Inventories & Items (Table Views)
+- Dashboard displays inventories using **tables** (latest + top by item count)
+- Inventory page shows items and supports selecting multiple items (checkbox selection UX)
+
+### Inventory Details
+- Markdown rendering for inventory descriptions
+- Discussion/comments UI included on the inventory page (DiscussionBoard component)
+
+### Custom Fields (Slot-based)
+Inventory supports a limited set of configurable “field slots” (as currently modeled), such as:
+- `string1..string3`
+- `number1`
+Including visibility flags (show/hide in table)
+
+### Custom Item IDs
+- Items have a `CustomId`
+- Database enforces **unique CustomId per inventory** with a composite unique index `(InventoryId, CustomId)`
+
+### Search
+- Global search endpoint and UI page that returns results for:
+  - Inventories
+  - Items
+
+### Tags
+- Tags endpoint exists in the backend
+- Tag cloud component exists in the dashboard UI
+
+### Likes
+- Like data model exists (`ItemLike` linked to user)
+
+### Optimistic Concurrency (Items)
+- Items use PostgreSQL `xmin` as a concurrency token for optimistic locking
+
+### Internationalization (i18n)
+- UI uses `react-i18next` and an `i18n.ts` configuration
+
+### Cloud Image Uploads (Cloudinary)
+- Cloudinary Upload Widget is included in the frontend and used via an `ImageUpload` component to upload an image and return a hosted URL.
+
+---
+
+## Project Structure
+
+- `Client/` — React frontend
+- `Server/` — .NET Web API backend
+- `InventoryManager.sln` — solution file
+
+---
+
+## Local Development Setup
 
 ### Prerequisites
-* [.NET 8 SDK](https://dotnet.microsoft.com/download)
-* [Node.js](https://nodejs.org/) (v18+)
-* [PostgreSQL](https://www.postgresql.org/) running locally
-* EF Core CLI Tools (`dotnet tool install --global dotnet-ef --version 8.0.12`)
-
-### 1. Database Configuration
-1. Open `Server/appsettings.Development.json`.
-2. Update the `DefaultConnection` string with your local PostgreSQL credentials (username and password).
-
-### 2. Apply Database Migrations
-Navigate to the `Server` directory and run the EF Core migrations to build the database tables:
-```bash
-cd Server
-dotnet ef database update
-3. Running the Application
-Backend (.NET API):
-
-Bash
-cd Server
-dotnet run
-The API will be available at http://localhost:5164 and Swagger UI at http://localhost:5164/swagger.
-
-Frontend (React/Vite):
-
-Bash
-cd Client
-npm install
-npm run dev
-The frontend will be available at http://localhost:5173. The Vite proxy is pre-configured to route /api requests to the .NET backend.
+- .NET 8 SDK
+- Node.js (v18+)
+- PostgreSQL running locally
+- EF Core CLI Tools:
+  ```bash
+  dotnet tool install --global dotnet-ef --version 8.0.12
